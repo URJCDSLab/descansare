@@ -1,33 +1,23 @@
-import pymysql
-import pandas as pd
+from src.features import sql_queries
 
-# Connect to the database.
-con = pymysql.connect(host='localhost',
-                      user='root',
-                      password='',
-                      db='flex',
-                      charset='utf8mb4',
-                      port=3306,
-                      cursorclass=pymysql.cursors.DictCursor)
 
-# prepare a cursor object using cursor() method
-cursor = con.cursor()
+dbc = {'host': 'localhost',
+       'user': 'root',
+       'password': '',
+       'db': 'flex',
+       'charset': 'utf8mb4',
+       'port': 3306
+       }
 
-# ejecuta el SQL query usando el metodo execute().
-cursor.execute("SELECT VERSION()")
+db_flex = sql_queries.Sql(dbc)
 
-try:
-    with con.cursor() as cursor:
-        # Read all records
-        sql = """select * from perfiles_usuario 
-       """
-        cursor.execute(sql)
-        result = cursor.fetchall()
-finally:
-    pass
+sesiones = db_flex.pandas_query("""select * from sesiones""")
 
-# Parse dict to pandas
-df = pd.DataFrame.from_dict(result)
+perfiles_usuario = db_flex.pandas_query("""select * from perfiles_usuario""")
 
-# Save data raw
-df.to_parquet('data/raw/flex_perfiles_usuario.parquet')
+db_flex.save_query(sesiones, 'sesiones')
+
+db_flex.save_query(sesiones, 'perfiles_usuario')
+
+
+
