@@ -1,6 +1,5 @@
 from src.features import sql_queries
 
-
 dbc = {'host': 'localhost',
        'user': 'root',
        'password': '',
@@ -17,7 +16,7 @@ perfiles_usuario = db_flex.pandas_query("""select * from perfiles_usuario""")
 
 db_flex.save_query(sesiones, 'sesiones')
 
-db_flex.save_query(sesiones, 'perfiles_usuario')
+db_flex.save_query(perfiles_usuario, 'perfiles_usuario')
 
 
 
