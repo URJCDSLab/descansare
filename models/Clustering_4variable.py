@@ -88,6 +88,12 @@ df_5var.groupby('labels').agg(
 
 ### Heatmap para las presiones
 
+# Creamos 1 dataframe por cada cluster
+# en cada uno pondremos por columnas las 12 posiciones
+# y por filas los 6 tipos de presion
+# calcularemos la frecuencia de aparacion de cada presion en cada posicion
+# y pintaremos un mapa de calor para poder comparar las presiones
+
 # Df para los 4 clusters
 cols = ['Pos1', 'Pos2', 'Pos3', 'Pos4', 'Pos5', 'Pos6',
         'Pos7', 'Pos8', 'Pos9', 'Pos10', 'Pos11', 'Pos12']
