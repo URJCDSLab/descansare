@@ -94,41 +94,66 @@ df_5var.groupby('labels').agg(
 # calcularemos la frecuencia de aparacion de cada presion en cada posicion
 # y pintaremos un mapa de calor para poder comparar las presiones
 
-# Df para los 4 clusters
-cols = ['Pos1', 'Pos2', 'Pos3', 'Pos4', 'Pos5', 'Pos6',
-        'Pos7', 'Pos8', 'Pos9', 'Pos10', 'Pos11', 'Pos12']
-rows_heat = ['Pres0', 'Pres1', 'Pres2', 'Pres3', 'Pres4', 'Pres5']
-list_result = []
+# Para ello hacemos una funcion previa
 
-for h in range(len(np.unique(labels))):
-    df_pres = df_5var.loc[df_5var['labels'] == h,'presiones']
+def presiones_df_heat(df):
+    # Dado un df input, separar las presiones de la variable presiones de perfiles_usuario
+    # df_pres: dataframe  de 12 columnas, una por cada posicion, 1 fila por id
+    # df_completo_pres: join(df, df_pres)
+    # df_pres_count: dataframe con 12 columnas (posiciones) y 6 filas (niveles de presion), conteo de valores
+    # df_pres_prop: df_pres_count/total valores
+
+    # Del df input nos quedamos con presiones
+    df_pres = df['presiones']
+
+    # Estructura para los df resultantes
+    cols = ['PresPos1', 'PresPos2', 'PresPos3', 'PresPos4', 'PresPos5', 'PresPos6',
+            'PresPos7', 'PresPos8', 'PresPos9', 'PresPos10', 'PresPos11', 'PresPos12']
+    rows_heat = ['NivPres0', 'NivPres1', 'NivPres2', 'NivPres3', 'NivPres4', 'NivPres5']
     rows = range(len(df_pres))
-    df_pres_distr = pd.DataFrame(columns=cols, index=rows)
+    df_pres_split = pd.DataFrame(columns=cols, index=rows)
+    df_pres_count = pd.DataFrame(columns=cols, index=rows_heat)
 
     # Separamos las presiones
     for j in range(len(df_pres)):
-        #print(j)
-        pres_ejem = df_pres.iloc[j]
-        pres_ejem_split = [pres_ejem[i:i + 1] for i in range(0, len(pres_ejem), 1)]
-        df_pres_distr.iloc[j, :] = pres_ejem_split
+        pres_j = df_pres.iloc[j]
+        pres_j_split = [pres_j[i:i + 1] for i in range(0, len(pres_j), 1)]
+        df_pres_split.iloc[j, :] = pres_j_split
 
-    # Rellenamos para el heatmap
-    df_press_heat = pd.DataFrame(columns=cols, index=rows_heat)
+    # Para la distribucion
     k = 0
     for pos in cols:
-        #print(pos)
-        to_fill = list(df_pres_distr.groupby(pos)[pos].size())
+        # print(pos)
+        to_fill = list(df_pres_split.groupby(pos)[pos].size())
         if len(to_fill) != 6:
-            to_fill = [sum(df_pres_distr[pos] == '0'),
-                       sum(df_pres_distr[pos] == '1'),
-                       sum(df_pres_distr[pos] == '2'),
-                       sum(df_pres_distr[pos] == '3'),
-                       sum(df_pres_distr[pos] == '4'),
-                       sum(df_pres_distr[pos] == '5')]
-        df_press_heat.iloc[:, k] = to_fill
+            to_fill = [sum(df_pres_split[pos] == '0'),
+                       sum(df_pres_split[pos] == '1'),
+                       sum(df_pres_split[pos] == '2'),
+                       sum(df_pres_split[pos] == '3'),
+                       sum(df_pres_split[pos] == '4'),
+                       sum(df_pres_split[pos] == '5')]
+        df_pres_count.iloc[:, k] = to_fill
         k += 1
 
-    list_result.append(df_press_heat)
+    # Dividimos df_pres_count por el total de observaciones para tener la proporcion
+    df_pres_prop = df_pres_count / len(df_pres)
+    # Juntamos las presiones separadas al df original
+    df_completo_pres = pd.concat([df, df_pres_split], axis=1, join='inner')
+
+    return df_completo_pres, df_pres_count, df_pres_prop
+
+
+
+
+# Usamos la funcion presiones_df_heat para obtener mapas de calor para los clusters
+
+# Df para los 4 clusters
+list_result = []
+for h in range(len(np.unique(labels))):
+    df_clusterh = df_5var.loc[df_5var['labels'] == h]
+    df_pres_h, df_pres_count_h, df_pres_prop_h = presiones_df_heat(df_clusterh)
+    list_result.append(df_pres_prop_h)
+
 
 df_press_heat0 = list_result[0]
 df_press_heat1 = list_result[1]
