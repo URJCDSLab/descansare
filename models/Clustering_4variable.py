@@ -24,7 +24,13 @@ perfiles[["altura", "peso"]] = perfiles[["altura", "peso"]].apply(pd.to_numeric)
 
 perfiles_filtrado = perfiles[(perfiles["activo"]==1) &(perfiles["peso"]<150) &
                              (perfiles["peso"]!=0 )& (perfiles["altura"]>100) & (perfiles["altura"]<220)]
+perfiles_filtrado = perfiles_filtrado[perfiles_filtrado["sexo"]!="Manual"] # quitamos manual en sexo y, consecuentemente, en posicion
 perfiles_filtrado.reset_index(drop=True, inplace=True)
+
+# IMC
+perfiles_filtrado['IMC'] = perfiles_filtrado['peso'] / (perfiles_filtrado['altura']/100)**2
+perfiles_filtrado['IMC_cat'] = pd.cut(perfiles_filtrado['IMC'], bins=[0, 18.5, 24.9, 29.9, 50],
+                                include_lowest=True,labels=['Bajo peso', 'Normal', 'Sobrepeso', 'Obesidad'])
 
 
 ###############################################################################################
@@ -33,7 +39,7 @@ perfiles_filtrado.reset_index(drop=True, inplace=True)
 
 # Nos quedamos con las variables que nos interesan para el clustering
 df_5var = perfiles_filtrado[["presiones","posicion","altura","peso","sexo"]]
-df_5var = df_5var[df_5var["sexo"]!="Manual"] # quitamos manual en sexo y, consecuentemente, en posicion
+#df_5var = df_5var[df_5var["sexo"]!="Manual"] # quitamos manual en sexo y, consecuentemente, en posicion
 df_4var = df_5var[["posicion","altura","peso","sexo"]]
 
 # Damos valores numéricos
@@ -172,3 +178,4 @@ plt.show()
 
 ax = sns.heatmap(df_press_heat3, linewidth=0.5)
 plt.show()
+
