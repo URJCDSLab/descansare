@@ -22,7 +22,7 @@ for col in ["altura", "peso"]:
 
 perfiles[["altura", "peso"]] = perfiles[["altura", "peso"]].apply(pd.to_numeric)
 
-perfiles_filtrado = perfiles[(perfiles["activo"]==1) &(perfiles["peso"]<150) &
+perfiles_filtrado = perfiles[(perfiles["peso"]<150) &
                              (perfiles["peso"]!=0 )& (perfiles["altura"]>100) & (perfiles["altura"]<220)]
 perfiles_filtrado = perfiles_filtrado[perfiles_filtrado["sexo"]!="Manual"] # quitamos manual en sexo y, consecuentemente, en posicion
 perfiles_filtrado.reset_index(drop=True, inplace=True)
