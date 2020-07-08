@@ -179,3 +179,26 @@ plt.show()
 ax = sns.heatmap(df_press_heat3, linewidth=0.5)
 plt.show()
 
+
+
+
+
+
+# desemejanza rango
+data = df_4var[["altura","peso"]]
+rangos = np.array(data.max(axis=0)) - np.array(data.min(axis=0))
+
+
+desem_rango = np.zeros((len(data),len(data)))
+
+for i in range(len(data) - 1):
+    for z in np.arange(i+1,len(data)):
+        for j in range(len(data.columns)):
+            desem_rango[i,z] += abs(data.iloc[i, j] - data.iloc[z, j]) / rangos[j]
+        if (df_4var.loc[i,"sexo"] == df_4var.loc[z,"sexo"]):
+            desem_rango[i, z] += 1
+        if (df_4var.loc[i,"posicion"] == df_4var.loc[z,"posicion"]):
+            desem_rango[i, z] += 1
+
+desem_rango = desem_rango + desem_rango.T - np.diag(np.diag(desem_rango))
+desem_rango.max()
