@@ -37,13 +37,14 @@ def perfiles_similarity(df,weights):
 
     ## Inicializo matriz
     n_filas= df.shape[0]
-    sim_matrix = np.zeros((n_filas, n_filas))
+    dis_matrix = np.zeros((n_filas, n_filas))
 
     ## Rango de peso y altura para calcular similaridad
     rango_peso=max(df.loc[:,"peso"])-min(df.loc[:,"peso"])
     rango_altura=max(df.loc[:,"altura"])-min(df.loc[:,"altura"])
 
     for i in range(n_filas):
+        print(i)
         individuo_i=df.loc[i,]
         for j in  np.arange(i + 1,n_filas):
             individuo_j=df.loc[j,]
@@ -52,22 +53,22 @@ def perfiles_similarity(df,weights):
             ## similaridad en altura
             dis_altura=abs(individuo_i['altura']-individuo_j['altura'])/rango_altura
             ## Similaridad en sexo
-            dis_sexo=1 if individuo_i['sexo']==individuo_j['sexo'] else 0
+            dis_sexo=0 if individuo_i['sexo']==individuo_j['sexo'] else 1
             ## similaridad en posicion
-            dis_posicion=1 if individuo_i['posicion']==individuo_j['posicion'] else 0
+            dis_posicion=0 if individuo_i['posicion']==individuo_j['posicion'] else 1
 
             ## desemejanza total
             vector_desemejanzas=np.array([dis_peso,dis_altura,dis_sexo,dis_posicion])
             dis=np.sum(np.multiply(vector_desemejanzas,np.array(weights)))
 
             ## relleno matriz
-            sim_matrix[i, j] = dis
+            dis_matrix[i, j] = dis
 
         ## relleno la diagonal de 1
-        sim_matrix[i, i] = 1
-    sim_matrix = sim_matrix + sim_matrix.T - np.diag(np.diag(sim_matrix))
+        dis_matrix[i, i] = 0
+    dis_matrix = dis_matrix + dis_matrix.T - np.diag(np.diag(dis_matrix))
 
-    return sim_matrix
+    return dis_matrix
 
 
 
