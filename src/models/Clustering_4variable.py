@@ -192,7 +192,7 @@ plt.show()
 ################                EVALUACION CLUSTERS EN PRESIONES               ################
 ###############################################################################################
 
-def evalucion_grupos_presiones(df):
+def evaluacion_grupos_similaridad_presiones(df):
     similarities=[]
     for h in range(len(np.unique(df['labels']))):
         df_clusterh = df.loc[df_perfiles['labels'] == h, "presiones"]
@@ -207,9 +207,24 @@ def evalucion_grupos_presiones(df):
     similarities=dict(zip(np.unique(df['labels']), similarities))
     return similarities
 
-summary_groups_presiones=evalucion_grupos_presiones(df_perfiles)
+groups_presiones_similaridad=evaluacion_grupos_similaridad_presiones(df_perfiles)
 
 
 
+def evaluacion_grupos_presiones(df,porcentaje):
+    presiones=[]
+    for h in range(len(np.unique(df['labels']))):
+        df_clusterh = df.loc[df_perfiles['labels'] == h, ]
+        n_filas = df_clusterh.shape[0]
+        presiones_h=df_clusterh.groupby("presiones").agg({'sqr': [min, max, 'mean', 'std',"size"]})
+        presiones_h=presiones_h[presiones_h['sqr']['size']>n_filas*porcentaje]
+        presiones_h=presiones_h.sort_values(('sqr','size'),ascending=False)
+        presiones.append(presiones_h)
 
+    presiones=dict(zip(np.unique(df['labels']), presiones))
+    return presiones
+
+
+porcentaje=0.05
+summary_groups_presiones=evaluacion_grupos_presiones(df_perfiles,porcentaje)
 

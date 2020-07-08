@@ -3,8 +3,8 @@
 ##############                  SIMILARIDAD ENTRE PRESIONES                 ###############
 ###########################################################################################
 
-# pressure1=perfiles_filtrado.loc[0,'presiones']
-# pressure2=perfiles_filtrado.loc[150,'presiones']
+# pressure1=df_perfiles.loc[0,'presiones']
+# pressure2=df_perfiles.loc[150,'presiones']
 
 def pressures_similarity(pressure1,pressure2):
     ## Comprobamos que tengan la misma longitud
