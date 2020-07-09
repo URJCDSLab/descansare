@@ -46,6 +46,9 @@ perfiles_sqr.reset_index(drop=True, inplace=True)
 
 # Nos quedamos con las variables que nos interesan para el clustering
 df_perfiles = perfiles_sqr[["presiones","posicion","altura","peso","sexo","sqr"]]
+summary_perfiles_df_total = df_perfiles.groupby("presiones").agg({'sqr': [min, max, 'mean', 'std','size']})
+len(summary_perfiles_df_total) # 185 presiones diferentes
+summary_perfiles_df_total = summary_perfiles_df_total[summary_perfiles_df_total['sqr']['size']>5]
 # Datos para cluster
 df_tocluster = df_perfiles[["posicion","altura","peso","sexo"]]
 
@@ -162,10 +165,12 @@ def presiones_df_heat(df):
 
 # Df para los 4 clusters
 list_result = []
+list_count_result = []
 for h in range(len(np.unique(labels))):
     df_clusterh = df_perfiles.loc[df_perfiles['labels'] == h]
     df_pres_h, df_pres_count_h, df_pres_prop_h = presiones_df_heat(df_clusterh)
     list_result.append(df_pres_prop_h)
+    list_count_result.append(df_pres_count_h)
 
 
 df_press_heat0 = list_result[0]
@@ -173,6 +178,10 @@ df_press_heat1 = list_result[1]
 df_press_heat2 = list_result[2]
 df_press_heat3 = list_result[3]
 
+df_press_count_heat0 = list_count_result[0]
+df_press_count_heat1 = list_count_result[1]
+df_press_count_heat2 = list_count_result[2]
+df_press_count_heat3 = list_count_result[3]
 
 ax = sns.heatmap(df_press_heat0, linewidth=0.5)
 plt.show()
@@ -225,6 +234,16 @@ def evaluacion_grupos_presiones(df,porcentaje):
     return presiones
 
 
-porcentaje=0.05
+porcentaje=0.04
 summary_groups_presiones=evaluacion_grupos_presiones(df_perfiles,porcentaje)
+
+
+#### Hago el estudio al reves, es decir, cojo los individuos con sqr>65 y veo
+# qué tienen en comun
+df_sqr65 = df_perfiles[df_perfiles["sqr"]>65]
+
+df_sqr65.groupby(["sexo","posicion","presiones"]).size()
+
+
+
 
