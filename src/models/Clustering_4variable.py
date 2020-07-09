@@ -241,8 +241,18 @@ summary_groups_presiones=evaluacion_grupos_presiones(df_perfiles,porcentaje)
 #### Hago el estudio al reves, es decir, cojo los individuos con sqr>65 y veo
 # qué tienen en comun
 df_sqr65 = df_perfiles[df_perfiles["sqr"]>65]
-
+df_sqr65.groupby(["sexo","posicion"]).size()
 df_sqr65.groupby(["sexo","posicion","presiones"]).size()
+
+df_sqr50 = df_perfiles[df_perfiles["sqr"]>50]
+df_sqr50.groupby(["sexo","posicion"]).size()
+summary_df_sqr50 = df_sqr50.groupby(["sexo","posicion","presiones"]).agg({'sqr': [min, max, 'mean', 'std',"size"]})
+
+df_sqr40 = df_perfiles[df_perfiles["sqr"]<40]
+summary_df_sqr40 = df_sqr40.groupby(["sexo","posicion","presiones"]).agg({'sqr': [min, max, 'mean', 'std',"size"]})
+
+
+
 
 
 
