@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 import sys
-sys.path.append(os.path.abspath('../src/models/'))
+sys.path.append(os.path.abspath('../descansare/src/models/'))
 from similarities import perfiles_similarity, pressures_similarity
 
 # # Cargamos las dos tablas de datos
