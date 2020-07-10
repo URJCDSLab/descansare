@@ -49,12 +49,10 @@ df_perfiles = perfiles_sqr[["presiones","posicion","altura","peso","sexo","sqr"]
 summary_perfiles_df_total = df_perfiles.groupby("presiones").agg({'sqr': [min, max, 'mean', 'std','size']})
 len(summary_perfiles_df_total) # 185 presiones diferentes
 summary_perfiles_df_total = summary_perfiles_df_total[summary_perfiles_df_total['sqr']['size']>5]
+
+
 # Datos para cluster
 df_tocluster = df_perfiles[["posicion","altura","peso","sexo"]]
-
-
-# Estandarizamos las variables continuas
-#df_4var[["altura","peso"]] = preprocessing.scale(df_4var[["altura","peso"]],with_mean=True, with_std=True)
 
 
 ###############################################################################################
