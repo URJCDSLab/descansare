@@ -1,7 +1,6 @@
 ### CLUSTERING
 from sklearn import preprocessing
 from statistics import mode
-import gower
 from sklearn.cluster import AgglomerativeClustering
 import scipy.cluster.hierarchy as sch
 import pandas as pd
@@ -9,32 +8,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
-import sys
-sys.path.append(os.path.abspath('../descansare/src/models/'))
-from similarities import perfiles_similarity, pressures_similarity
+from src.models.similarities import perfiles_similarity
 
-# # Cargamos las dos tablas de datos
-# perfiles = pd.read_parquet('data/raw/flex_perfiles_usuario.parquet')
-# sesiones = pd.read_parquet('data/raw/flex_sesiones.parquet')
-#
-# # Filtro en perfiles valores erroneos peso y altura. Corrección formatos
-# perfiles.loc[perfiles["posicion"]=="manual","posicion"] = "Manual"
-#
-# for col in ["altura", "peso"]:
-#     perfiles[col] = perfiles[col].str.replace(',', '.')
-#
-# perfiles[["altura", "peso"]] = perfiles[["altura", "peso"]].apply(pd.to_numeric)
-#
-# perfiles_filtrado = perfiles[(perfiles["peso"]<150) &
-#                              (perfiles["peso"]!=0 )& (perfiles["altura"]>100) & (perfiles["altura"]<220)]
-# perfiles_filtrado = perfiles_filtrado[perfiles_filtrado["sexo"]!="Manual"] # quitamos manual en sexo y, consecuentemente, en posicion
-# perfiles_filtrado.reset_index(drop=True, inplace=True)
-#
-# # IMC
-# perfiles_filtrado['IMC'] = perfiles_filtrado['peso'] / (perfiles_filtrado['altura']/100)**2
-# perfiles_filtrado['IMC_cat'] = pd.cut(perfiles_filtrado['IMC'], bins=[0, 18.5, 24.9, 29.9, 50],
-#                                 include_lowest=True,labels=['Bajo peso', 'Normal', 'Sobrepeso', 'Obesidad'])
-#
 
 
 perfiles_sqr = pd.read_parquet('data/processed/perfiles_sqr_filtrado.parquet')
@@ -158,7 +133,6 @@ def presiones_df_heat(df):
 
 
 
-
 # Usamos la funcion presiones_df_heat para obtener mapas de calor para los clusters
 
 # Df para los 4 clusters
@@ -234,24 +208,6 @@ def evaluacion_grupos_presiones(df,porcentaje):
 
 porcentaje=0.04
 summary_groups_presiones=evaluacion_grupos_presiones(df_perfiles,porcentaje)
-
-
-#### Hago el estudio al reves, es decir, cojo los individuos con sqr>65 y veo
-# qué tienen en comun
-df_sqr65 = df_perfiles[df_perfiles["sqr"]>65]
-df_sqr65.groupby(["sexo","posicion"]).size()
-df_sqr65.groupby(["sexo","posicion","presiones"]).size()
-
-df_sqr50 = df_perfiles[df_perfiles["sqr"]>50]
-df_sqr50.groupby(["sexo","posicion"]).size()
-summary_df_sqr50 = df_sqr50.groupby(["sexo","posicion","presiones"]).agg({'sqr': [min, max, 'mean', 'std',"size"]})
-
-df_sqr40 = df_perfiles[df_perfiles["sqr"]<40]
-summary_df_sqr40 = df_sqr40.groupby(["sexo","posicion","presiones"]).agg({'sqr': [min, max, 'mean', 'std',"size"]})
-
-
-
-
 
 
 
