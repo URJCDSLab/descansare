@@ -45,7 +45,7 @@ def perfiles_similarity(df,weights):
     rango_altura=max(df.loc[:,"altura"])-min(df.loc[:,"altura"])
 
     for i in range(n_filas):
-        print(i)
+        # print(i)
         individuo_i=df.loc[i,]
         for j in  np.arange(i + 1,n_filas):
             individuo_j=df.loc[j,]
