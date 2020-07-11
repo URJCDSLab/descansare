@@ -10,6 +10,8 @@ class Knn:
         self.neighbours = None
         self.preds = None
         self.range_vars = None
+        self.target = None
+        self.ref = None
 
     def fit(self, X, target, ref):
 
@@ -19,17 +21,19 @@ class Knn:
         max_vars = X.max(axis=0)
         min_vars = X.min(axis=0)
         self.X = X
+        self.target = target
+        self.ref = ref
         self.range_vars = max_vars-min_vars
         self.dist_matrix = self.__dist()
         self.__knn(target, ref)
 
-    def __knn(self, target, ref):
+    def __knn(self):
         tot_neighbours = []
         preds = []
         for vec in self.dist_matrix:
             neighbours = vec.argsort()[1:self.k + 1]
-            max_ref_neighbour = neighbours[ref[neighbours].argmax()]
-            preds.append(target[max_ref_neighbour])
+            max_ref_neighbour = neighbours[self.ref[neighbours].argmax()]
+            preds.append(self.target[max_ref_neighbour])
             tot_neighbours.append(neighbours)
         self.neighbours = tot_neighbours
         self.preds = preds
