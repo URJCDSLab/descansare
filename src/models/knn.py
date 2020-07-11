@@ -25,7 +25,7 @@ class Knn:
         self.ref = ref
         self.range_vars = max_vars-min_vars
         self.dist_matrix = self.__dist()
-        self.__knn(target, ref)
+        self.__knn()
 
     def __knn(self):
         tot_neighbours = []
