@@ -20,10 +20,10 @@ class Knn:
         min_vars = X.min(axis=0)
         self.X = X
         self.range_vars = max_vars-min_vars
-        self.dist_matrix = self.dist()
-        self.knn(target, ref)
+        self.dist_matrix = self.__dist()
+        self.__knn(target, ref)
 
-    def knn(self, target, ref):
+    def __knn(self, target, ref):
         tot_neighbours = []
         preds = []
         for vec in self.dist_matrix:
@@ -34,15 +34,16 @@ class Knn:
         self.neighbours = tot_neighbours
         self.preds = preds
 
-    def dist(self):
+    def __dist(self):
         dist = np.zeros((self.X.shape[0], self.X.shape[0]))
         for i, instance in enumerate(self.X):
-            for instance_next in self.X[1:]:
+            for j, instance_next in enumerate(self.X[1:]):
                 try:
-                    dist[i, i + 1] = np.sum((np.abs(instance - instance_next)/self.range_vars) * self.weights)
-                    dist[i + 1, i] = dist[i, i + 1]
+                    dist[i, j + 1] = np.sum((np.abs(instance - instance_next)/self.range_vars) * self.weights)
+                    dist[j + 1, i] = dist[i, j + 1]
                 except:
                     pass
+        return dist
 
     def predict(self, X_pred):
         pass
