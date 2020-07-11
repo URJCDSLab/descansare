@@ -6,7 +6,7 @@ class Knn:
         self.weights = weights
         self.k = k
         self.dist_matrix = dist_matrix
-        self.df = None
+        self.X = None
         self.neighbours = None
         self.preds = None
         self.range_vars = None
