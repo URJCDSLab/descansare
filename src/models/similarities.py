@@ -34,7 +34,6 @@ def pressures_similarity(pressure1,pressure2):
 # weights=[1/4,1/4,1/4,1/4]
 
 def perfiles_similarity(df,weights):
-    import numpy as np
 
     ## Inicializo matriz
     n_filas= df.shape[0]
