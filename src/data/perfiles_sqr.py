@@ -32,15 +32,18 @@ perfiles_sqr_filtrado.to_parquet(f'data/processed/perfiles_sqr_filtrado.parquet'
 
 # Procesado de variables categóricas para el knn
 
+# Instanciamos el labelencoder
 le = LabelEncoder()
 
+# Copia del dataframe con las variables de interés
 df_perfiles = perfiles_sqr_filtrado[["presiones",  "altura", "peso", "sqr"]].copy()
 
+# Se crean las dos variables nuevas con la codificación adecuada
 df_perfiles.loc[:, 'posicion'] = le.fit_transform(perfiles_sqr_filtrado['posicion'])
 df_perfiles.loc[:, 'sexo'] = le.fit_transform(perfiles_sqr_filtrado['sexo'])
 
 # Guardado de datos procesados para el knn
-perfiles_sqr_filtrado.to_parquet(f'data/processed/perfiles_sqr_knn.parquet')
+df_perfiles.to_parquet(f'data/processed/perfiles_sqr_knn.parquet')
 
 
 
