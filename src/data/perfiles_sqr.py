@@ -1,4 +1,5 @@
 import pandas as pd
+from sklearn.preprocessing import LabelEncoder
 
 # Cargamos las dos tablas de datos
 perfiles = pd.read_parquet('data/raw/flex_perfiles_usuario.parquet')
@@ -28,4 +29,18 @@ perfiles_sqr_filtrado = perfiles_sqr[(perfiles_sqr["peso"] < 150)
 
 # Guardado de datos procesados
 perfiles_sqr_filtrado.to_parquet(f'data/processed/perfiles_sqr_filtrado.parquet')
+
+# Procesado de variables categóricas para el knn
+
+le = LabelEncoder()
+
+df_perfiles = perfiles_sqr_filtrado[["presiones",  "altura", "peso", "sqr"]].copy()
+
+df_perfiles.loc[:, 'posicion'] = le.fit_transform(perfiles_sqr_filtrado['posicion'])
+df_perfiles.loc[:, 'sexo'] = le.fit_transform(perfiles_sqr_filtrado['sexo'])
+
+# Guardado de datos procesados para el knn
+perfiles_sqr_filtrado.to_parquet(f'data/processed/perfiles_sqr_knn.parquet')
+
+
 
