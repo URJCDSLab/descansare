@@ -52,5 +52,8 @@ class Knn:
         neighbours, preds = self.__knn(dist_preds)
         mask = [True, neighbours_index, dist_matrix]
         predicted = [preds, neighbours, dist_preds]
-
-        return list(compress(predicted, mask))
+        try:
+            predictions = list(*compress(predicted, mask))
+        except:
+            predictions = list(compress(predicted, mask))
+        return predictions
