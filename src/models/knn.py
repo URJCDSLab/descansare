@@ -1,53 +1,59 @@
 import numpy as np
-
+from itertools import compress
 
 class Knn:
     def __init__(self, k=3, weights=None, dist_matrix=None):
         self.weights = weights
         self.k = k
         self.dist_matrix = dist_matrix
-        self.X = None
+        self.data_train = None
         self.neighbours = None
         self.preds = None
         self.range_vars = None
         self.target = None
         self.ref = None
 
-    def fit(self, X, target, ref):
+    def fit(self, data_train, target, ref):
 
         if self.weights is None:
-            self.weights = np.ones(X.shape[1])*(1/X.shape[1])
+            self.weights = np.ones(data_train.shape[1]) * (1 / data_train.shape[1])
 
-        max_vars = X.max(axis=0)
-        min_vars = X.min(axis=0)
-        self.X = X
+        max_vars = data_train.max(axis=0)
+        min_vars = data_train.min(axis=0)
+        self.data_train = data_train
         self.target = target
         self.ref = ref
-        self.range_vars = max_vars-min_vars
-        self.dist_matrix = self.__dist()
-        self.__knn()
+        self.range_vars = max_vars - min_vars
+        self.dist_matrix = self.__dist(self.data_train)
+        self.neighbours, self.preds = self.__knn(self.dist_matrix)
 
-    def __knn(self):
-        tot_neighbours = []
-        preds = []
-        for vec in self.dist_matrix:
-            neighbours = vec.argsort()[1:self.k + 1]
-            max_ref_neighbour = neighbours[self.ref[neighbours].argmax()]
-            preds.append(self.target[max_ref_neighbour])
-            tot_neighbours.append(neighbours)
-        self.neighbours = tot_neighbours
-        self.preds = preds
+    def __knn(self, dist_matrix):
 
-    def __dist(self):
-        dist = np.zeros((self.X.shape[0], self.X.shape[0]))
-        for i, instance in enumerate(self.X):
-            for j, instance_next in enumerate(self.X[1:]):
-                try:
-                    dist[i, j + 1] = np.sum((np.abs(instance - instance_next)/self.range_vars) * self.weights)
-                    dist[j + 1, i] = dist[i, j + 1]
-                except:
-                    pass
+        neighbours = dist_matrix.argsort()[:, 1:self.k + 1]
+        max_ref_neighbours = self.ref[neighbours].argmax(axis=1)
+        # se tiene que poder hacer mejor
+        preds_index = neighbours.reshape(-1, )[
+            [i * neighbours.shape[1] for i in range(neighbours.shape[0])] + max_ref_neighbours]
+        preds = self.target[preds_index].tolist()
+        return neighbours, preds
+
+    def __dist(self, data_points):
+
+        dist = np.zeros((data_points.shape[0], self.data_train.shape[0]))
+        # vectorizar este for
+        for i, vec in enumerate(data_points):
+            dists = np.sum((np.abs(vec - self.data_train) / self.range_vars) * self.weights, axis=1)
+            dist[i, :] = dists
+
         return dist
 
-    def predict(self, X_pred):
-        pass
+    def predict(self, data_pred, neighbours_index=False, dist_matrix=False):
+        dist_preds = self.__dist(data_pred)
+        neighbours, preds = self.__knn(dist_preds)
+        mask = [True, neighbours_index, dist_matrix]
+        predicted = [preds, neighbours, dist_preds]
+        try:
+            predictions = list(*compress(predicted, mask))
+        except:
+            predictions = list(compress(predicted, mask))
+        return predictions
