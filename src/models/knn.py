@@ -34,7 +34,7 @@ class Knn:
         # se tiene que poder hacer mejor
         preds_index = neighbours.reshape(-1, )[
             [i * neighbours.shape[1] for i in range(neighbours.shape[0])] + max_ref_neighbours]
-        preds = self.target[preds_index].tolist()
+        preds = np.hstack((self.target[preds_index].reshape(-1, 1), self.ref[preds_index].reshape(-1, 1)))
         return neighbours, preds
 
     def __dist(self, data_points):
@@ -48,6 +48,11 @@ class Knn:
         return dist
 
     def predict(self, data_pred, neighbours_index=False, dist_matrix=False):
+
+        # One-dimensional vector reshape
+        if data_pred.ndim == 1:
+            data_pred = np.reshape(data_pred, (1, data_pred.shape[0]))
+
         dist_preds = self.__dist(data_pred)
         neighbours, preds = self.__knn(dist_preds)
         mask = [True, neighbours_index, dist_matrix]
