@@ -1,6 +1,7 @@
 import numpy as np
 from itertools import compress
 
+
 class Knn:
     def __init__(self, k=3, weights=None, dist_matrix=None):
         self.weights = weights
