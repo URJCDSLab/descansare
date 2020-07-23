@@ -6,7 +6,7 @@
     width: 100%;
 }
 body {
-    background-color: #F5F5F5;
+    background-color: #e0f5f7;
     width: 100%;
     font-family: "Open Sans", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
@@ -14,6 +14,7 @@ body {
 #contenido {
     display: inline-flex;
     margin-top: 25px;
+
 }
 #vp-control-tabs {
     grid-column-start: 1;
@@ -27,6 +28,7 @@ body {
     padding: 40px;
     width: 400px;
     margin-left:5%;
+        background-color: white;
 }
 p {
     text-align: justify;
@@ -43,9 +45,10 @@ p {
     padding: 20px;
     width: 900px;
     margin-left:20px;
+    background-color: white;
 }
 
-#predecir {box-shadow: 0 0 #e8e8e8; background-color: #C8C8C8;}
+#predecir { background-color: #f4fafb;}
 input[type="email"],
 input[type="number"],
 input[type="search"],

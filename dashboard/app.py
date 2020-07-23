@@ -82,7 +82,7 @@ def layout():
         #Empieza Header
         html.Div(className='header', children=[
             html.H1(
-                "ABACO: Modelo de día 0",
+                "ABACO: Modelo de Día 0",
                 style={"textAlign":"center"}
             )
         ]),
@@ -160,7 +160,7 @@ def layout():
                             , style={"display": "inline-block","verticalAlign": "middle","width": "120px"})])
                         ]),
                         html.Div(children=[
-                        html.Button('Predecir', id='predecir',className="predecir", n_clicks=0,style={"marginTop": "50px","width":"50%","height": "40px"})],
+                        html.Button('Configuración inicial Día 0', id='predecir',className="predecir", n_clicks=0,style={"marginTop": "50px","width":"50%","height": "40px","-webkit-border-radius": "50px"})],
                         style={"textAlign":"center"})
                     ])
                 )
