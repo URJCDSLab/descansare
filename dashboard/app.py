@@ -26,7 +26,7 @@ def plot_heatmap(df):
                     labels=dict(x="Posición del tubo", y="Nivel de presión", color="Porcentaje de uso"),
                     x=['Pos. 1', 'Pos. 2', 'Pos. 3', 'Pos. 4', 'Pos. 5', 'Pos. 6', 'Pos. 7', 'Pos. 8',
                        'Pos. 9', 'Pos. 10', 'Pos. 11', 'Pos. 12'],
-                    y=['Nivel 0', 'Nivel 1', 'Nivel 2', 'Nivel 3', 'Nivel 4', 'Nivel 5'])
+                    y=['Nivel 1', 'Nivel 2', 'Nivel 3', 'Nivel 4', 'Nivel 5', 'Nivel 6'])
     fig.update_xaxes(side="top")
     return fig
 
