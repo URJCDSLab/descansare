@@ -14,9 +14,14 @@ sesiones = db_flex.pandas_query("""select * from sesiones""")
 
 perfiles_usuario = db_flex.pandas_query("""select * from perfiles_usuario""")
 
+movimientos = db_flex.pandas_query("""select * from movimientos""")
+
 db_flex.save_query(sesiones, 'sesiones')
 
 db_flex.save_query(perfiles_usuario, 'perfiles_usuario')
+
+db_flex.save_query(movimientos, 'movimientos')
+
 
 
 
