@@ -1,5 +1,6 @@
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
+from src.features.build_features import presiones_lecho
 
 # Cargamos las dos tablas de datos
 perfiles = pd.read_parquet('data/raw/flex_perfiles_usuario.parquet')
@@ -8,11 +9,18 @@ sesiones = pd.read_parquet('data/raw/flex_sesiones.parquet')
 sesiones_validas = sesiones.idPerfil.isin(set(perfiles.idPerfiles))
 
 ultima_sesion = sesiones[sesiones_validas].sort_values(['idPerfil', 'fechaInicio'],
-                                                       ascending=False).groupby('idPerfil').first()[['sqr']]
+                                                       ascending=False).groupby('idPerfil').first()[['sqr', 'lecho']]
 
 perfiles_info = perfiles.set_index('idPerfiles')
 
 perfiles_sqr = perfiles_info.join(ultima_sesion, how='inner')
+
+# Refactorización de presiones
+
+perfiles_sqr['presiones_old'] = perfiles_sqr['presiones']
+
+perfiles_sqr['presiones'] = perfiles_sqr.presiones.apply(lambda x: x[0]+x[2]+x[4:8])
+
 
 # Procesado de errores en las columnas numéricas
 for col in ['altura', 'peso']:
