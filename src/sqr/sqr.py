@@ -72,7 +72,7 @@ def calculate_movements_score(data_df):
     # 7.5 -> 8 horas
     data_df.loc[(data_df.index >= 27000) & (data_df.index < 28800) & (data_df['type'] == 'STRONG'), 'sqi'] = 1
     # Calculo HORAS dormidas (last_move en php)
-    hours = max(data_df.index) / 3600
+    hours = data_df.index.max() / 3600
     # calculo sqi total
     sqi = data_df['sqi'].sum() / hours
     movements_score = max([0, ((-8 * sqi) / 3) + 80])
@@ -81,7 +81,7 @@ def calculate_movements_score(data_df):
 
 
 def calculate_sleep_hours_factor(data_df):
-    hours = max(data_df.index) / 3600
+    hours = data_df.index.max() / 3600
     sleep_hours_factor = ((10 * hours) + 20) / 100
     
     return sleep_hours_factor
@@ -90,10 +90,10 @@ def preprocess_data(sleep_start_time, movement_df):
     data_df = movement_df[['timestamp', 'type']].copy()
     data_df = data_df.set_index('timestamp')
     # filtramos despues de dormir
-    data_df = data_df[sleep_start_time:]
     # creamos una columna para apuntar el sqi de cada movimiento. Por defecto 0
     data_df['sqi'] = 0
-    data_df.index = (data_df.index.to_timestamp() - sleep_start_time).total_seconds()
+    data_df.index = (data_df.index - sleep_start_time).total_seconds()
+    data_df = data_df[data_df.index > 0]
     
     return data_df
 
