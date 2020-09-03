@@ -1,11 +1,7 @@
-from random import choices
-
-import numpy as np
-import pandas as pd
-
 MOV_TYPES = ['LIGHT', 'MEDIUM_1', 'MEDIUM_2', 'STRONG']
 UP_TYPE = 'UP'
 DOWN_TYPE = 'DOWN'
+
 
 def calculate_awake_time_score(data_df):
     aux = data_df[data_df['type'].isin([UP_TYPE, DOWN_TYPE])]
@@ -36,9 +32,7 @@ def calculate_awake_time_score(data_df):
     out_of_bed_factor = aux['diff'].sum()
     # puntuacion_tiempo_despierto = ((-15*outOfBedFactor)/15)+15 (por 15 entre 15 ??)
     awake_time_score = max([0, ((-15 * out_of_bed_factor) / 15) + 15])
-    
-    
-    
+
     return awake_time_score
 
 
@@ -88,6 +82,7 @@ def calculate_sleep_hours_factor(data_df):
     
     return sleep_hours_factor
 
+
 def preprocess_data(sleep_start_time, movement_df):
     data_df = movement_df[['timestamp', 'type']].copy()
     data_df = data_df.set_index('timestamp')
@@ -99,8 +94,9 @@ def preprocess_data(sleep_start_time, movement_df):
     
     return data_df
 
+
 def calculate_sqi(start_time, sleep_start_time, movement_df):
-    ''' entre 0-100''' 
+    # entre 0-100
     data_df = preprocess_data(sleep_start_time, movement_df)
     awake_time_score = calculate_awake_time_score(data_df)
     latency_time_score = calculate_latency_time_score(start_time, sleep_start_time)
