@@ -37,12 +37,14 @@ def calculate_awake_time_score(data_df):
     # puntuacion_tiempo_despierto = ((-15*outOfBedFactor)/15)+15 (por 15 entre 15 ??)
     awake_time_score = max([0, ((-15 * out_of_bed_factor) / 15) + 15])
     
+    
+    
     return awake_time_score
 
 
 def calculate_latency_time_score(start_time, sleep_start_time):
-    diff = (sleep_start_time - start_time).seconds
-    latency_time_score = max([0, ((-5 * diff / 60) / 60) + 5])
+    diff = (sleep_start_time - start_time).seconds / 60
+    latency_time_score = max([0, ((-5 * diff) / 60) + 5])
     
     return latency_time_score
 
@@ -82,7 +84,7 @@ def calculate_movements_score(data_df):
 
 def calculate_sleep_hours_factor(data_df):
     hours = data_df.index.max() / 3600
-    sleep_hours_factor = ((10 * hours) + 20) / 100
+    sleep_hours_factor = min(1, 0.2 + ((1 - 0.2) * (hours / 8)))
     
     return sleep_hours_factor
 
