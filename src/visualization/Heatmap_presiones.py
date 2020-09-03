@@ -1,4 +1,6 @@
 import pandas as pd
+
+
 ### Heatmap para las presiones
 
 # Creamos 1 dataframe pondremos por columnas las 6 posiciones
@@ -47,11 +49,10 @@ def presiones_df_heat(df):
         k += 1
 
     # Dividimos df_pres_count por el total de observaciones para tener la proporcion
-    df_pres_prop = round((df_pres_count / len(df_pres))*100,2)
+    df_pres_prop = round((df_pres_count / len(df_pres)) * 100, 2)
     # Juntamos las presiones separadas al df original
     # reset index de df para poder hacer el concat
     df = df.reset_index(drop=True)
-    df_completo_pres = pd.concat([df, df_pres_split], axis = 1)
+    df_completo_pres = pd.concat([df, df_pres_split], axis=1)
 
     return df_completo_pres, df_pres_count, df_pres_prop
-
