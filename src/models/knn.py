@@ -40,17 +40,10 @@ class Knn:
 
     def __dist(self, data_points):
 
-        # dist = np.zeros((data_points.shape[0], self.data_train.shape[0]))
-
         def f(vec):
             return np.sum((np.abs(vec - self.data_train) / self.range_vars) * self.weights, axis=1)
 
-
-        # vectorizar este for
-        # for i, vec in enumerate(data_points):
-        #     dists = np.sum((np.abs(vec - self.data_train) / self.range_vars) * self.weights, axis=1)
         dist = np.apply_along_axis(f, 1, data_points)
-            # dist[i, :] = dists
 
         return dist
 
