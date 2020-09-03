@@ -1,7 +1,7 @@
 import pandas as pd
 ### Heatmap para las presiones
 
-# Creamos 1 dataframe pondremos por columnas las 12 posiciones
+# Creamos 1 dataframe pondremos por columnas las 6 posiciones
 # y por filas los 6 tipos de presion
 # calcularemos la frecuencia de aparacion de cada presion en cada posicion
 # y pintaremos un mapa de calor para poder comparar las presiones
@@ -10,17 +10,16 @@ import pandas as pd
 
 def presiones_df_heat(df):
     # Dado un df input, separar las presiones de la variable presiones de perfiles_usuario
-    # df_pres: dataframe  de 12 columnas, una por cada posicion, 1 fila por id
+    # df_pres: dataframe  de 6 columnas, una por cada posicion, 1 fila por id
     # df_completo_pres: join(df, df_pres)
-    # df_pres_count: dataframe con 12 columnas (posiciones) y 6 filas (niveles de presion), conteo de valores
+    # df_pres_count: dataframe con 6 columnas (posiciones) y 6 filas (niveles de presion), conteo de valores
     # df_pres_prop: df_pres_count/total valores
 
     # Del df input nos quedamos con presiones
     df_pres = df['presiones']
 
     # Estructura para los df resultantes
-    cols = ['PresPos1', 'PresPos2', 'PresPos3', 'PresPos4', 'PresPos5', 'PresPos6',
-            'PresPos7', 'PresPos8', 'PresPos9', 'PresPos10', 'PresPos11', 'PresPos12']
+    cols = ['PresPos1', 'PresPos2', 'PresPos3', 'PresPos4', 'PresPos5', 'PresPos6']
     rows_heat = ['NivPres0', 'NivPres1', 'NivPres2', 'NivPres3', 'NivPres4', 'NivPres5']
     rows = range(len(df_pres))
     df_pres_split = pd.DataFrame(columns=cols, index=rows)
@@ -50,6 +49,9 @@ def presiones_df_heat(df):
     # Dividimos df_pres_count por el total de observaciones para tener la proporcion
     df_pres_prop = round((df_pres_count / len(df_pres))*100,2)
     # Juntamos las presiones separadas al df original
-    df_completo_pres = pd.concat([df, df_pres_split], axis=1, join='inner')
+    # reset index de df para poder hacer el concat
+    df = df.reset_index(drop=True)
+    df_completo_pres = pd.concat([df, df_pres_split], axis = 1)
 
     return df_completo_pres, df_pres_count, df_pres_prop
+
