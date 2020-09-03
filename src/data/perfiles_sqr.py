@@ -4,7 +4,7 @@ from datetime import datetime
 
 # Cargamos las dos tablas de datos
 perfiles = pd.read_parquet('data/raw/flex_perfiles_usuario.parquet')
-sesiones = pd.read_parquet('data/raw/flex_sesiones.parquet')
+sesiones = pd.read_parquet('data/interim/sessions_new_sqr_flex.parquet')
 
 # Filtrado de sesiones válidas
 # #Sesiones con perfil asociado en la tabla de perfiles
