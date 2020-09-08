@@ -1,20 +1,24 @@
-
 import os
-import pandas as pd
+import sys
+
 import numpy as np
+import pandas as pd
 
-import dash_html_components as html
-import dash_core_components as dcc
 from dash.dependencies import Input, Output, State
-import dash_daq as daq
-import dash_bio
-import dash
-
-import dash_core_components as dcc
-import dash_html_components as html
 import base64
-import pickle
+import dash
+import dash_bio
+import dash_core_components as dcc
+import dash_core_components as dcc
+import dash_daq as daq
+import dash_html_components as html
+import dash_html_components as html
 import plotly.express as px
+
+if sys.version_info < (3, 7):
+    import pickle5 as pickle
+else:
+    import pickle
 
 
 DATAPATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'model')
