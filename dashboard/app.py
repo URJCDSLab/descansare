@@ -1,20 +1,24 @@
-
 import os
-import pandas as pd
+import sys
+
 import numpy as np
+import pandas as pd
 
-import dash_html_components as html
-import dash_core_components as dcc
 from dash.dependencies import Input, Output, State
-import dash_daq as daq
-import dash_bio
-import dash
-
-import dash_core_components as dcc
-import dash_html_components as html
 import base64
-import pickle
+import dash
+import dash_bio
+import dash_core_components as dcc
+import dash_core_components as dcc
+import dash_daq as daq
+import dash_html_components as html
+import dash_html_components as html
 import plotly.express as px
+
+if sys.version_info < (3, 7):
+    import pickle5 as pickle
+else:
+    import pickle
 
 
 DATAPATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'model')
@@ -24,8 +28,7 @@ with open(os.path.join(DATAPATH, 'knn.p'), 'rb') as pickle_file:
 def plot_heatmap(df):
     fig = px.imshow(df,
                     labels=dict(x="Posición del tubo", y="Nivel de presión", color="Porcentaje de uso"),
-                    x=['Pos. 1', 'Pos. 2', 'Pos. 3', 'Pos. 4', 'Pos. 5', 'Pos. 6', 'Pos. 7', 'Pos. 8',
-                       'Pos. 9', 'Pos. 10', 'Pos. 11', 'Pos. 12'],
+                    x=['Pos. 1', 'Pos. 2', 'Pos. 3', 'Pos. 4', 'Pos. 5', 'Pos. 6'],
                     y=['Nivel 1', 'Nivel 2', 'Nivel 3', 'Nivel 4', 'Nivel 5', 'Nivel 6'])
     fig.update_xaxes(side="top")
     return fig
@@ -41,9 +44,8 @@ def presiones_df_heat(df):
     df_pres = pd.Series(df)
 
     # Estructura para los df resultantes
-    cols = ['PresPos1', 'PresPos2', 'PresPos3', 'PresPos4', 'PresPos5', 'PresPos6',
-            'PresPos7', 'PresPos8', 'PresPos9', 'PresPos10', 'PresPos11', 'PresPos12']
-    rows_heat = ['NivPres0', 'NivPres1', 'NivPres2', 'NivPres3', 'NivPres4', 'NivPres5']
+    cols = ['PresPos1', 'PresPos2', 'PresPos3', 'PresPos4', 'PresPos5', 'PresPos6']
+    rows_heat = ['NivPres1', 'NivPres2', 'NivPres3', 'NivPres4', 'NivPres5', 'NivPres6']
     rows = range(len(df_pres))
     df_pres_split = pd.DataFrame(columns=cols, index=rows)
     df_pres_count = pd.DataFrame(columns=cols, index=rows_heat)
@@ -172,7 +174,7 @@ def layout():
                 id='plot-div',
                 children=dcc.Graph(
                     id='plot'
-                ,style={"height":"420px"}),
+                ,style={"height":"550px"}),
             )),
             html.Div(id='results', className="results",
              children=[
@@ -226,4 +228,4 @@ callbacks(app)
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, port=8050)
+    app.run_server(debug=True, port=8050, host='0.0.0.0')

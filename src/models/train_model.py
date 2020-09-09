@@ -11,3 +11,4 @@ knn = Knn(k=11, weights=np.ones(4)*0.25)
 knn.fit(perfiles[['altura', 'peso', 'posicion', 'sexo']].values, perfiles["presiones"].values, perfiles["sqr"].values)
 # Serialize model
 pickle.dump(knn, open('models/knn.p', 'wb'), protocol=pickle.HIGHEST_PROTOCOL)
+pickle.dump(knn, open('dashboard/model/knn.p', 'wb'), protocol=pickle.HIGHEST_PROTOCOL)
