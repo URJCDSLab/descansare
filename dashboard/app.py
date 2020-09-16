@@ -93,12 +93,12 @@ def presiones_df_heat(df):
 
 sidebar = html.Div(
     [
-        html.H2("Modelos", className="display-4"),
+        html.H2("Modelos", className="display-4",style={"font-size":"40px"}),
         html.Hr(),
         dbc.Nav(
             [
-                dbc.NavItem(dbc.NavLink("Modelo día 0", href="/page-1",active=True)),
-                dbc.NavItem(dbc.NavLink("Modelo supervisado", href="/page-2")),
+                dbc.NavItem(dbc.NavLink("Modelo día 0", href="/page-1", id="page-1-link")),
+                dbc.NavItem(dbc.NavLink("Modelo supervisado", href="/page-2",id="page-2-link")),
             ],
             vertical=True,
             pills=True,
@@ -200,7 +200,7 @@ def modelo_dia_cero():
                             , style={"display": "inline-block","verticalAlign": "middle","width": "120px"})])
                         ]),
                         html.Div(children=[
-                        html.Button('Configuración inicial Día 0', id='predecir',className="predecir", n_clicks=0,style={"marginTop": "50px","width":"50%","height": "40px","-webkit-border-radius": "50px"})],
+                        html.Button('Configuración inicial Día 0', id='predecir',className="predecir", n_clicks=0,style={"marginTop": "50px","width":"50%","height": "50px","-webkit-border-radius": "50px"})],
                         style={"textAlign":"center"})
                     ])
                 )
@@ -289,7 +289,7 @@ def modelo_supervisado():
                             , style={"display": "inline-block","verticalAlign": "middle","width": "120px"})])
                         ]),
                         html.Div(children=[
-                        html.Button('Obtener Configuración', id='predecir2',className="predecir", n_clicks=0,style={"marginTop": "50px","width":"50%","height": "40px","-webkit-border-radius": "50px"})],
+                        html.Button('Obtener Configuración', id='predecir2',className="predecir", n_clicks=0,style={"marginTop": "50px","width":"50%","height": "50px","-webkit-border-radius": "50px"})],
                         style={"textAlign":"center"})
                     ])
                 )
@@ -551,7 +551,7 @@ def callbacks(_app):
 app = dash.Dash(__name__,external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.scripts.config.serve_locally = True
 app.config['suppress_callback_exceptions'] = True
-content = html.Div(id="page-content", style={    "margin-left": "18rem",    "margin-right": "2rem",    "padding": "2rem 1rem",})
+content = html.Div(id="page-content", style={"margin-left": "18rem",    "margin-right": "2rem",    "padding": "2rem 1rem",})
 app.layout= html.Div([dcc.Location(id="url", refresh=False), sidebar, content])
 app_name ='Abaco'
 callbacks(app)
@@ -559,4 +559,4 @@ callbacks(app)
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, port=7036, host='0.0.0.0')
+    app.run_server(debug=True, port=7038, host='0.0.0.0')
