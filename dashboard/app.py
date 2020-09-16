@@ -3,7 +3,7 @@ import sys
 
 import numpy as np
 import pandas as pd
-
+import string
 from dash.dependencies import Input, Output, State
 import base64
 import dash
@@ -200,7 +200,7 @@ def modelo_dia_cero():
                             , style={"display": "inline-block","verticalAlign": "middle","width": "120px"})])
                         ]),
                         html.Div(children=[
-                        html.Button('Configuración inicial Día 0', id='predecir',className="predecir", n_clicks=0,style={"marginTop": "50px","width":"50%","height": "50px","-webkit-border-radius": "50px"})],
+                        html.Button('Configuración inicial Día 0', id='predecir',className="predecir", n_clicks=0,style={"marginTop": "50px","width":"70%","height": "70px","-webkit-border-radius": "50px"})],
                         style={"textAlign":"center"})
                     ])
                 )
@@ -216,9 +216,9 @@ def modelo_dia_cero():
             )),
             html.Div(id='results', className="results",
              children=[
-                 html.H4(id="resultado-output3", style={"fontSize": "13px"}),
-                 html.H4(id="resultado-output",style={"fontSize":"13px"}),
-                 html.H4(id="resultado-output2",style={"fontSize":"13px"})
+                 html.H2(id="resultado-output3",style={"fontSize":"20px","textAlign":"center" ,"color":"green"}),
+                 html.H2(id="resultado-output",style={"fontSize":"20px","textAlign":"center" ,"color":"green"}),
+                 html.H2(id="resultado-output2",style={"fontSize":"20px","textAlign":"center" ,"color":"green"}),
              ])
         ])
     ])
@@ -289,7 +289,7 @@ def modelo_supervisado():
                             , style={"display": "inline-block","verticalAlign": "middle","width": "120px"})])
                         ]),
                         html.Div(children=[
-                        html.Button('Obtener Configuración', id='predecir2',className="predecir", n_clicks=0,style={"marginTop": "50px","width":"50%","height": "50px","-webkit-border-radius": "50px"})],
+                        html.Button('Obtener Configuración', id='predecir2',className="predecir", n_clicks=0,style={"marginTop": "50px","width":"70%","height": "70px","-webkit-border-radius": "50px"})],
                         style={"textAlign":"center"})
                     ])
                 )
@@ -310,7 +310,7 @@ def modelo_supervisado():
                      html.H2(id="resultado-output6",style={"fontSize":"20px","textAlign":"center","color":"green"}),
                 ],style={"margin-top":"40px","padding":"20px"}),
                  html.Div(className="results", children=[
-                     html.H4("Configuración seleccionada",
+                     html.H4("Configuración personalizada",
                              style={"fontSize": "20px", "textAlign": "center", "marginTop": "10px"}),
                      html.H2(id="resultado-output7",
                              style={"fontSize": "20px", "textAlign": "center", "marginTop": "1px", "color": "green"}),
@@ -332,6 +332,8 @@ def modelo_supervisado():
                 dcc.Loading(className='dashbio-loading', children=html.Div(
                     id='sliders',
                     children=[
+                        html.Div( className="labels",
+                                 children=[
                         dcc.Slider(
                             id='slider_updatemode_1',
                             marks={i: "{}".format(i) for i in [1, 2, 3, 4,5,6]},
@@ -340,60 +342,76 @@ def modelo_supervisado():
                             step=1,
                             updatemode='drag',
                             vertical=True
-                        ),  dcc.Slider(
-                            id='slider_updatemode_2',
-                            marks={i: "{}".format(i) for i in [1, 2, 3, 4,5,6]},
-                            min=1,
-                            max=6,
-                            step=1,
-                            updatemode='drag',
-                            vertical=True
-                        ),  dcc.Slider(
-                            id='slider_updatemode_3',
-                            marks={i: "{}".format(i) for i in [1, 2, 3, 4,5,6]},
-                            min=1,
-                            max=6,
-                            step=1,
-                            updatemode='drag',
-                            vertical=True
-                        ),  dcc.Slider(
-                            id='slider_updatemode_4',
-                            marks={i: "{}".format(i) for i in [1, 2, 3, 4,5,6]},
-                            min=1,
-                            max=6,
-                            step=1,
-                            updatemode='drag',
-                            vertical=True
-                        ),  dcc.Slider(
-                            id='slider_updatemode_5',
-                            marks={i: "{}".format(i) for i in [1, 2, 3, 4,5,6]},
-                            min=1,
-                            max=6,
-                            step=1,
-                            updatemode='drag',
-                            vertical=True
-                        ),  dcc.Slider(
-                            id='slider_updatemode_6',
-                            marks={i: "{}".format(i) for i in [1, 2, 3, 4,5,6]},
-                            min=1,
-                            max=6,
-                            step=1,
-                            updatemode='drag',
-                            vertical=True
-                        )
-
+                        ),
+                                     html.H2("Tubo 1", style={"fontSize": "13px", "margin-top":"10px"}),
+                                 ]),
+                        html.Div(className="labels",
+                                 children=[
+                                     dcc.Slider(
+                                         id='slider_updatemode_2',
+                                         marks={i: "{}".format(i) for i in [1, 2, 3, 4, 5, 6]},
+                                         min=1,
+                                         max=6,
+                                         step=1,
+                                         updatemode='drag',
+                                         vertical=True
+                                     ),
+                                     html.H2("Tubo 2", style={"fontSize": "13px", "margin-top":"10px"}),
+                                 ]),
+                        html.Div(className="labels",
+                                 children=[
+                                     dcc.Slider(
+                                         id='slider_updatemode_3',
+                                         marks={i: "{}".format(i) for i in [1, 2, 3, 4, 5, 6]},
+                                         min=1,
+                                         max=6,
+                                         step=1,
+                                         updatemode='drag',
+                                         vertical=True
+                                     ),
+                                     html.H2("Tubo 3", style={"fontSize": "13px", "margin-top":"10px"}),
+                                 ]),
+                        html.Div(className="labels",
+                                 children=[
+                                     dcc.Slider(
+                                         id='slider_updatemode_4',
+                                         marks={i: "{}".format(i) for i in [1, 2, 3, 4, 5, 6]},
+                                         min=1,
+                                         max=6,
+                                         step=1,
+                                         updatemode='drag',
+                                         vertical=True
+                                     ),
+                                     html.H2("Tubo 4", style={"fontSize": "13px", "margin-top": "10px"}),
+                                 ]),
+                        html.Div(className="labels",
+                                 children=[
+                                     dcc.Slider(
+                                         id='slider_updatemode_5',
+                                         marks={i: "{}".format(i) for i in [1, 2, 3, 4, 5, 6]},
+                                         min=1,
+                                         max=6,
+                                         step=1,
+                                         updatemode='drag',
+                                         vertical=True
+                                     ),
+                                     html.H2("Tubo 5", style={"fontSize": "13px", "margin-top":"10px"}),
+                                 ]),
+                        html.Div(className="labels",
+                                 children=[
+                                     dcc.Slider(
+                                         id='slider_updatemode_6',
+                                         marks={i: "{}".format(i) for i in [1, 2, 3, 4, 5, 6]},
+                                         min=1,
+                                         max=6,
+                                         step=1,
+                                         updatemode='drag',
+                                         vertical=True
+                                     ),
+                                     html.H2("Tubo 6", style={"fontSize": "13px", "margin-top":"10px"}),
+                                 ]),
                     ]
-                , style = {"height": "300px","display":"flex"})),
-
-                html.Div(id='labels', className="labels",
-                         children=[
-                             html.H2("Tubo 1", style={"fontSize": "13px","margin-left":"65px"}),
-                             html.H2("Tubo 2", style={"fontSize": "13px","margin-left":"45px"}),
-                             html.H2("Tubo 3", style={"fontSize": "13px","margin-left":"49px"}),
-                             html.H2("Tubo 4", style={"fontSize": "13px","margin-left":"49px"}),
-                             html.H2("Tubo 5", style={"fontSize": "13px","margin-left":"43px"}),
-                             html.H2("Tubo 6", style={"fontSize": "13px","margin-left":"48px"}),
-                         ],style={"display": "flex","margin-top":"70px"}),
+                , style = {"height": "300px","display":"flex"}))
 
             ]),
     ])
@@ -451,10 +469,13 @@ def callbacks(_app):
 
         heatmap= presiones_df_heat(target[0])
         plot = plot_heatmap(heatmap[2])
+
+        optima = [int(i) + 1 for i in results[0][0][0]]
+
         return 'Configuración Óptima recomendada: {}'.format(
-            results[0][0][0]
+            ''.join(map(str, optima))
         ),'SQI esperado con la configuración recomendada: {}'.format(
-            results[0][0][1]), 'SQI medio: {} ± {}'.format(mean,std),  plot
+            round(results[0][0][1],2)), 'SQI medio: {} ± {}'.format(round(mean,2),round(std,2)),  plot
 
     @_app.callback(
         [Output('resultado-output5', 'children'),
@@ -535,7 +556,7 @@ def callbacks(_app):
         std = round(perfiles_afines["sqr"].std(),2)
 
         if math.isnan(mean) or math.isnan(std):
-            result = "SQI medio: No hay registros en la base de datos"
+            result = "No hay registros en la base de datos"
         else:
             result = '{} ± {}'.format(mean, std)
 
@@ -559,4 +580,4 @@ callbacks(app)
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, port=7038, host='0.0.0.0')
+    app.run_server(debug=True, port=8050, host='0.0.0.0')
