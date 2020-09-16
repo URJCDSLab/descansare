@@ -14,6 +14,8 @@ import dash_daq as daq
 import dash_html_components as html
 import dash_html_components as html
 import plotly.express as px
+import dash_bootstrap_components as dbc
+import math
 
 if sys.version_info < (3, 7):
     import pickle5 as pickle
@@ -24,6 +26,17 @@ else:
 DATAPATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'model')
 with open(os.path.join(DATAPATH, 'knn.p'), 'rb') as pickle_file:
     model = pickle.load(pickle_file)
+
+perfiles_sqr = pd.read_parquet('./data/perfiles_sqr_filtrado.parquet')
+perfiles_sqr.reset_index(drop=True, inplace=True) # reseteamos el índice
+perfiles_sqr['IMC'] = perfiles_sqr['peso'] / (perfiles_sqr['altura']/100)**2
+perfiles_sqr['IMC_cat'] = pd.cut(perfiles_sqr['IMC'], bins=[0, 25, 30, 50],
+                                include_lowest=True,labels=['Normal', 'Overweight', 'Obese'])
+
+# tubos
+for i in range(6):
+    perfiles_sqr[f'PresPos{i+1}'] = perfiles_sqr.presiones.apply(lambda x: x[i])
+
 
 def plot_heatmap(df):
     fig = px.imshow(df,
@@ -78,13 +91,38 @@ def presiones_df_heat(df):
 
 
 
-def layout():
+sidebar = html.Div(
+    [
+        html.H2("Modelos", className="display-4"),
+        html.Hr(),
+        dbc.Nav(
+            [
+                dbc.NavItem(dbc.NavLink("Modelo día 0", href="/page-1",active=True)),
+                dbc.NavItem(dbc.NavLink("Modelo supervisado", href="/page-2")),
+            ],
+            vertical=True,
+            pills=True,
+        ),
+    ],
+            style={
+            "position": "fixed",
+            "top": 0,
+            "left": 0,
+            "bottom": 0,
+            "width": "16rem",
+            "padding": "2rem 1rem",
+            "background-color": "#f8f9fa",
+        },
+)
 
+
+
+def modelo_dia_cero():
     return html.Div(id='app', className='app', children=[
         #Empieza Header
         html.Div(className='header', children=[
             html.H1(
-                "ABACO: Modelo de Día 0",
+                "ABACO: Modelo de día 0",
                 style={"textAlign":"center"}
             )
         ]),
@@ -187,7 +225,208 @@ def layout():
     ])
 
 
+
+def modelo_supervisado():
+
+    return html.Div(id='app2', className='app', children=[
+        #Empieza Header
+        html.Div(className='header', children=[
+            html.H1(
+                "ABACO: Modelo supervisado",
+                style={"textAlign":"center"}
+            )
+        ]),
+        #Fin de header
+
+        #Empieza contenedor de contenido (segunda row html)
+        html.Div(id="contenido2", className='contenido', children=[
+        html.Div(id='vp-control-tabs2', className='control-tabs', children=[
+            dcc.Tabs(id='vp-tabs2', value='predecir2', children=[
+                dcc.Tab(
+                    label='Predecir',
+                    value='predecir2',
+                    children=html.Div(className='control-tab', children=[
+                        html.Br(),
+                        html.Br(),
+                        html.Div(className="Sexo", children=[
+                            html.Div(style={"display": "inline-block", "width":"60%"}, children=[
+                            html.H4("Sexo",style={"display": "inline-block"}),]),
+                            html.Div(style={"display": "inline-block", "width": "40%"}, children=[
+                            dcc.Dropdown(
+                                id='sexo',
+                                options=[
+                                    {'label': 'Masculino', 'value': 'Male'},
+                                    {'label': 'Femenino', 'value': 'Female'},
+                                ],
+                                value='Male'
+                            ,style={"display": "inline-block","verticalAlign": "middle","width": "120px"})])
+                        ], style={"width": "100%"}),
+                        html.Div(className="altura", children=[
+                            html.Div(style={"display": "inline-block", "width": "60%"}, children=[
+                            html.H4("Altura (cm)" , style={"display":"inline-block"})]),
+                            html.Div(style={"display": "inline-block", "width": "40%"}, children=[
+                            dcc.Input(id="altura", type="number", placeholder="Altura (cm)",min=0, max=250, step=1,value="180",
+                                      style={"display": "inline-block","verticalAlign": "middle","width": "120px"})])
+                        ],style={"width":"100%"}),
+                        html.Div(className="peso", children=[
+                            html.Div(style={"display": "inline-block", "width": "60%"}, children=[
+                            html.H4("Peso (Kg)",style={"display": "inline-block"})]),
+                            html.Div(style={"display": "inline-block", "width": "40%"}, children=[
+                            dcc.Input(id="peso", type="number", placeholder="Peso (Kg)", min=0, max=300, step=1,value="80",
+                                      style={"display": "inline-block","verticalAlign": "middle","width": "120px"})])
+                        ], style={"width": "100%"}),
+                        html.Div(className="Posicion", children=[
+                            html.Div(style={"display": "inline-block", "width": "60%"}, children=[
+                            html.H4("Posición",style={"display": "inline-block"})]),
+                            html.Div(style={"display": "inline-block", "width": "40%"}, children=[
+                            dcc.Dropdown(
+                                id='posicion',
+                                options=[
+                                    {'label': 'Lateral', 'value': 'Lateral'},
+                                    {'label': 'Supine', 'value': 'Supine'},
+                                ],
+                                value='Lateral'
+                            , style={"display": "inline-block","verticalAlign": "middle","width": "120px"})])
+                        ]),
+                        html.Div(children=[
+                        html.Button('Obtener Configuración', id='predecir2',className="predecir", n_clicks=0,style={"marginTop": "50px","width":"50%","height": "40px","-webkit-border-radius": "50px"})],
+                        style={"textAlign":"center"})
+                    ])
+                )
+            ])
+        ]),
+        html.Div(id='comun-content', className="comun-content", children=[
+
+            html.Div(id='results2',
+             children=[                     dcc.Loading(id="loading1",children=[
+
+                 html.Div( className="results", children=[
+
+                     html.H2("Configuración más común",
+                             style={"fontSize": "20px", "textAlign": "center", "marginTop": "10px"}),
+                     html.H2(id="resultado-output5",style={"fontSize":"20px","textAlign":"center" ,"color":"green"}),
+                     html.H2("SQI medio:",
+                             style={"fontSize": "20px", "textAlign": "center", "marginTop": "40px"}),
+                     html.H2(id="resultado-output6",style={"fontSize":"20px","textAlign":"center","color":"green"}),
+                ],style={"margin-top":"40px","padding":"20px"}),
+                 html.Div(className="results", children=[
+                     html.H4("Configuración seleccionada",
+                             style={"fontSize": "20px", "textAlign": "center", "marginTop": "10px"}),
+                     html.H2(id="resultado-output7",
+                             style={"fontSize": "20px", "textAlign": "center", "marginTop": "1px", "color": "green"}),
+                     html.H4("SQI medio:",
+                             style={"fontSize": "20px", "textAlign": "center", "marginTop": "40px"}),
+                     html.H2(id="resultado-output8",
+                             style={"fontSize": "20px", "textAlign": "center", "marginTop": "1px", "color": "green"})
+                ],style={"margin-top":"60px","padding":"20px"})
+
+             ])
+                                            ])
+        ]),
+            html.Div(id='play-content', className="play-content", children=[
+                html.H4("Personalización de presiones",
+                        style={"fontSize": "20px", "textAlign": "center", "marginTop": "1px"}),
+
+
+
+                dcc.Loading(className='dashbio-loading', children=html.Div(
+                    id='sliders',
+                    children=[
+                        dcc.Slider(
+                            id='slider_updatemode_1',
+                            marks={i: "{}".format(i) for i in [1, 2, 3, 4,5,6]},
+                            min=1,
+                            max=6,
+                            step=1,
+                            updatemode='drag',
+                            vertical=True
+                        ),  dcc.Slider(
+                            id='slider_updatemode_2',
+                            marks={i: "{}".format(i) for i in [1, 2, 3, 4,5,6]},
+                            min=1,
+                            max=6,
+                            step=1,
+                            updatemode='drag',
+                            vertical=True
+                        ),  dcc.Slider(
+                            id='slider_updatemode_3',
+                            marks={i: "{}".format(i) for i in [1, 2, 3, 4,5,6]},
+                            min=1,
+                            max=6,
+                            step=1,
+                            updatemode='drag',
+                            vertical=True
+                        ),  dcc.Slider(
+                            id='slider_updatemode_4',
+                            marks={i: "{}".format(i) for i in [1, 2, 3, 4,5,6]},
+                            min=1,
+                            max=6,
+                            step=1,
+                            updatemode='drag',
+                            vertical=True
+                        ),  dcc.Slider(
+                            id='slider_updatemode_5',
+                            marks={i: "{}".format(i) for i in [1, 2, 3, 4,5,6]},
+                            min=1,
+                            max=6,
+                            step=1,
+                            updatemode='drag',
+                            vertical=True
+                        ),  dcc.Slider(
+                            id='slider_updatemode_6',
+                            marks={i: "{}".format(i) for i in [1, 2, 3, 4,5,6]},
+                            min=1,
+                            max=6,
+                            step=1,
+                            updatemode='drag',
+                            vertical=True
+                        )
+
+                    ]
+                , style = {"height": "300px","display":"flex"})),
+
+                html.Div(id='labels', className="labels",
+                         children=[
+                             html.H2("Tubo 1", style={"fontSize": "13px","margin-left":"65px"}),
+                             html.H2("Tubo 2", style={"fontSize": "13px","margin-left":"45px"}),
+                             html.H2("Tubo 3", style={"fontSize": "13px","margin-left":"49px"}),
+                             html.H2("Tubo 4", style={"fontSize": "13px","margin-left":"49px"}),
+                             html.H2("Tubo 5", style={"fontSize": "13px","margin-left":"43px"}),
+                             html.H2("Tubo 6", style={"fontSize": "13px","margin-left":"48px"}),
+                         ],style={"display": "flex","margin-top":"70px"}),
+
+            ]),
+    ])
+    ])
+
+
+
 def callbacks(_app):
+    @_app.callback(
+        [Output(f"page-{i}-link", "active") for i in range(1, 3)],
+        [Input("url", "pathname")],
+    )
+    def toggle_active_links(pathname):
+        print(pathname)
+        if pathname == "/":
+            return True, False
+        return [pathname == f"/page-{i}" for i in range(1, 3)]
+
+    @_app.callback(Output("page-content", "children"), [Input("url", "pathname")])
+    def render_page_content(pathname):
+        if pathname in ["/", "/page-1"]:
+            return modelo_dia_cero()
+        elif pathname == "/page-2":
+            return modelo_supervisado()
+        # If the user tries to reach a different page, return a 404 message
+        return dbc.Jumbotron(
+            [
+                html.H1("404: Not found", className="text-danger"),
+                html.Hr(),
+                html.P(f"The pathname {pathname} was not recognised..."),
+            ]
+        )
+
     @_app.callback(
         [Output('resultado-output', 'children'),
          Output('resultado-output2', 'children'),
@@ -209,6 +448,7 @@ def callbacks(_app):
         std = np.std(sqis[0])
         mean = np.round(mean,decimals=3)
         std = np.round(std, decimals=3)
+
         heatmap= presiones_df_heat(target[0])
         plot = plot_heatmap(heatmap[2])
         return 'Configuración Óptima recomendada: {}'.format(
@@ -216,16 +456,107 @@ def callbacks(_app):
         ),'SQI esperado con la configuración recomendada: {}'.format(
             results[0][0][1]), 'SQI medio: {} ± {}'.format(mean,std),  plot
 
+    @_app.callback(
+        [Output('resultado-output5', 'children'),
+         Output('resultado-output6', 'children'),
+         Output(component_id='slider_updatemode_1', component_property='value'),
+         Output(component_id='slider_updatemode_2', component_property='value'),
+         Output(component_id='slider_updatemode_3', component_property='value'),
+         Output(component_id='slider_updatemode_4', component_property='value'),
+         Output(component_id='slider_updatemode_5', component_property='value'),
+         Output(component_id='slider_updatemode_6', component_property='value')],
+        [
+            Input('predecir2', 'n_clicks')
+        ],
+    [dash.dependencies.State('sexo', 'value'),
+     dash.dependencies.State('posicion', 'value'),
+     dash.dependencies.State('altura', 'value'),
+     dash.dependencies.State('peso', 'value')]
+    )
+    def get_results(predecir,sexo,posicion,altura,peso):
+        imc = int(peso) / (int(altura)/100)**2
+        if (imc<25):
+            imc = "Normal"
+        elif (imc>25) and (imc<30):
+            imc ="Overweight"
+        else:
+            imc = "Obese"
+
+        perfiles_afines = perfiles_sqr[(perfiles_sqr["IMC_cat"] == imc) & (perfiles_sqr["sexo"] == sexo) & (perfiles_sqr["posicion"] == posicion)].groupby('presiones').describe().loc[:, 'sqr']
+        perfiles_afines = perfiles_afines.rename({'count': 'frecuencia absoluta', 'mean': 'media', 'std': 'desviacion'},
+                                             axis='columns').round(2)
+        perfiles_afines['frecuencia absoluta'] = perfiles_afines['frecuencia absoluta'].astype('int')
+        presiones_afines = perfiles_afines.sort_values(by='frecuencia absoluta', ascending=False).head(3)
 
 
-app = dash.Dash(__name__)
+        presion_comun= presiones_afines.head(1).index[0]
+        presion_comun=[int(i)+1 for i in presion_comun]
+        mean = presiones_afines.iloc[[0]]["media"].values[0]
+        std = presiones_afines.iloc[[0]]["desviacion"].values[0]
+        return presion_comun,'{} ± {}'.format(mean,std), int(presion_comun[0]),int(presion_comun[1]),int(presion_comun[2]),int(presion_comun[3]),int(presion_comun[4]),int(presion_comun[5])
+
+    @_app.callback(
+        [Output('resultado-output7', 'children'),
+         Output('resultado-output8', 'children')],
+    [dash.dependencies.Input('slider_updatemode_1', 'value'),
+     dash.dependencies.Input('slider_updatemode_2', 'value'),
+     dash.dependencies.Input('slider_updatemode_3', 'value'),
+     dash.dependencies.Input('slider_updatemode_4', 'value'),
+     dash.dependencies.Input('slider_updatemode_5', 'value'),
+     dash.dependencies.Input('slider_updatemode_6', 'value'),
+     ],
+    [dash.dependencies.State('sexo', 'value'),
+     dash.dependencies.State('posicion', 'value'),
+     dash.dependencies.State('altura', 'value'),
+     dash.dependencies.State('peso', 'value')]
+    )
+    def update_play(slider_updatemode_1,slider_updatemode_2,slider_updatemode_3,slider_updatemode_4,slider_updatemode_5,slider_updatemode_6,sexo,posicion,altura,peso):
+        imc = int(peso) / (int(altura) / 100) ** 2
+        if (imc < 25):
+            imc = "Normal"
+        elif (imc > 25) and (imc < 30):
+            imc = "Overweight"
+        else:
+            imc = "Obese"
+
+        if (slider_updatemode_1 is not None) and (slider_updatemode_2 is not None) and (slider_updatemode_3 is not None) and (slider_updatemode_4 is not None) and (slider_updatemode_5 is not None) and (slider_updatemode_6 is not None):
+            slider_updatemode_1 = int(slider_updatemode_1)-1
+            slider_updatemode_2 = int(slider_updatemode_2)-1
+            slider_updatemode_3 = int(slider_updatemode_3) - 1
+            slider_updatemode_4 = int(slider_updatemode_4) - 1
+            slider_updatemode_5 = int(slider_updatemode_5) - 1
+            slider_updatemode_6 = int(slider_updatemode_6) - 1
+
+        perfiles_afines = perfiles_sqr[(perfiles_sqr["IMC_cat"] == imc) & (perfiles_sqr["sexo"] == sexo) & (
+                    perfiles_sqr["posicion"] == posicion) & (perfiles_sqr["presiones"] ==
+        '{}{}{}{}{}{}'.format(slider_updatemode_1,slider_updatemode_2,slider_updatemode_3,slider_updatemode_4,slider_updatemode_5,slider_updatemode_6))]
+
+        mean = round(perfiles_afines["sqr"].mean(),2)
+        std = round(perfiles_afines["sqr"].std(),2)
+
+        if math.isnan(mean) or math.isnan(std):
+            result = "SQI medio: No hay registros en la base de datos"
+        else:
+            result = '{} ± {}'.format(mean, std)
+
+        return '{}{}{}{}{}{}'.format(slider_updatemode_1,slider_updatemode_2,slider_updatemode_3,slider_updatemode_4,slider_updatemode_5,slider_updatemode_6),result
+
+
+
+
+
+
+
+
+app = dash.Dash(__name__,external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.scripts.config.serve_locally = True
 app.config['suppress_callback_exceptions'] = True
-app.layout=layout()
+content = html.Div(id="page-content", style={    "margin-left": "18rem",    "margin-right": "2rem",    "padding": "2rem 1rem",})
+app.layout= html.Div([dcc.Location(id="url", refresh=False), sidebar, content])
 app_name ='Abaco'
 callbacks(app)
 
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, port=8050, host='0.0.0.0')
+    app.run_server(debug=True, port=7036, host='0.0.0.0')
