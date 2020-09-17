@@ -102,6 +102,10 @@ p {
 }
 
 
+.slider_h{
+    width:40px;
+}
+
 .predecir { background-color: #f4fafb;}
 input[type="email"],
 input[type="number"],

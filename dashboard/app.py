@@ -216,9 +216,22 @@ def modelo_dia_cero():
             )),
             html.Div(id='results', className="results",
              children=[
-                 html.H2(id="resultado-output3",style={"fontSize":"20px","textAlign":"center" ,"color":"green"}),
-                 html.H2(id="resultado-output",style={"fontSize":"20px","textAlign":"center" ,"color":"green"}),
-                 html.H2(id="resultado-output2",style={"fontSize":"20px","textAlign":"center" ,"color":"green"}),
+                 html.Div(style={"display": "flex"},children=[
+                     html.H2("SQI medio: ",style={"fontSize": "20px"}),
+                             html.H2(id="resultado-output3",
+                                     style={"fontSize": "20px", "textAlign": "center", "color": "green"})
+                 ]),
+                 html.Div(style={"display": "flex"},children=[
+                     html.H2("Configuración óptima recomendada: ",style={"fontSize": "20px"}),
+                             html.H2(id="resultado-output",
+                                     style={"fontSize": "20px", "textAlign": "center", "color": "green"})
+                 ]),
+                 html.Div(style={"display": "flex"},children=[
+                     html.H2("SQI esperado con la configuración recomendada: ",style={"fontSize": "20px"}),
+                     html.H2(id="resultado-output2",
+                             style={"fontSize": "20px", "textAlign": "center", "color": "green"}),
+                 ])
+
              ])
         ])
     ])
@@ -335,6 +348,7 @@ def modelo_supervisado():
                         html.Div( className="labels",
                                  children=[
                         dcc.Slider(
+                            className="slider_h",
                             id='slider_updatemode_1',
                             marks={i: "{}".format(i) for i in [1, 2, 3, 4,5,6]},
                             min=1,
@@ -348,6 +362,7 @@ def modelo_supervisado():
                         html.Div(className="labels",
                                  children=[
                                      dcc.Slider(
+                                         className="slider_h",
                                          id='slider_updatemode_2',
                                          marks={i: "{}".format(i) for i in [1, 2, 3, 4, 5, 6]},
                                          min=1,
@@ -361,6 +376,7 @@ def modelo_supervisado():
                         html.Div(className="labels",
                                  children=[
                                      dcc.Slider(
+                                         className="slider_h",
                                          id='slider_updatemode_3',
                                          marks={i: "{}".format(i) for i in [1, 2, 3, 4, 5, 6]},
                                          min=1,
@@ -374,6 +390,7 @@ def modelo_supervisado():
                         html.Div(className="labels",
                                  children=[
                                      dcc.Slider(
+                                         className="slider_h",
                                          id='slider_updatemode_4',
                                          marks={i: "{}".format(i) for i in [1, 2, 3, 4, 5, 6]},
                                          min=1,
@@ -387,6 +404,7 @@ def modelo_supervisado():
                         html.Div(className="labels",
                                  children=[
                                      dcc.Slider(
+                                         className="slider_h",
                                          id='slider_updatemode_5',
                                          marks={i: "{}".format(i) for i in [1, 2, 3, 4, 5, 6]},
                                          min=1,
@@ -400,6 +418,7 @@ def modelo_supervisado():
                         html.Div(className="labels",
                                  children=[
                                      dcc.Slider(
+                                         className="slider_h",
                                          id='slider_updatemode_6',
                                          marks={i: "{}".format(i) for i in [1, 2, 3, 4, 5, 6]},
                                          min=1,
@@ -472,10 +491,10 @@ def callbacks(_app):
 
         optima = [int(i) + 1 for i in results[0][0][0]]
 
-        return 'Configuración Óptima recomendada: {}'.format(
+        return '{}'.format(
             ''.join(map(str, optima))
-        ),'SQI esperado con la configuración recomendada: {}'.format(
-            round(results[0][0][1],2)), 'SQI medio: {} ± {}'.format(round(mean,2),round(std,2)),  plot
+        ),'{}'.format(
+            round(results[0][0][1],2)), '{} ± {}'.format(round(mean,2),round(std,2)),  plot
 
     @_app.callback(
         [Output('resultado-output5', 'children'),
@@ -540,13 +559,6 @@ def callbacks(_app):
         else:
             imc = "Obese"
 
-        if (slider_updatemode_1 is not None) and (slider_updatemode_2 is not None) and (slider_updatemode_3 is not None) and (slider_updatemode_4 is not None) and (slider_updatemode_5 is not None) and (slider_updatemode_6 is not None):
-            slider_updatemode_1 = int(slider_updatemode_1)-1
-            slider_updatemode_2 = int(slider_updatemode_2)-1
-            slider_updatemode_3 = int(slider_updatemode_3) - 1
-            slider_updatemode_4 = int(slider_updatemode_4) - 1
-            slider_updatemode_5 = int(slider_updatemode_5) - 1
-            slider_updatemode_6 = int(slider_updatemode_6) - 1
 
         perfiles_afines = perfiles_sqr[(perfiles_sqr["IMC_cat"] == imc) & (perfiles_sqr["sexo"] == sexo) & (
                     perfiles_sqr["posicion"] == posicion) & (perfiles_sqr["presiones"] ==
