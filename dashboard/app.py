@@ -93,7 +93,7 @@ def presiones_df_heat(df):
 
 sidebar = html.Div(
     [
-        html.H2("Modelos", className="display-4",style={"font-size":"40px"}),
+        html.H2("Modelos", className="display-4",style={"fontSize":"40px"}),
         html.Hr(),
         dbc.Nav(
             [
@@ -111,7 +111,7 @@ sidebar = html.Div(
             "bottom": 0,
             "width": "16rem",
             "padding": "2rem 1rem",
-            "background-color": "#f8f9fa",
+            "backgroundColor": "#f8f9fa",
         },
 )
 
@@ -200,7 +200,7 @@ def modelo_dia_cero():
                             , style={"display": "inline-block","verticalAlign": "middle","width": "120px"})])
                         ]),
                         html.Div(children=[
-                        html.Button('Configuración inicial Día 0', id='predecir',className="predecir", n_clicks=0,style={"marginTop": "50px","width":"70%","height": "70px","-webkit-border-radius": "50px"})],
+                        html.Button('Configuración inicial Día 0', id='predecir',className="predecir", n_clicks=0,style={"marginTop": "50px","width":"70%","height": "70px","WebkitBorderRadius": "50px"})],
                         style={"textAlign":"center"})
                     ])
                 )
@@ -302,7 +302,7 @@ def modelo_supervisado():
                             , style={"display": "inline-block","verticalAlign": "middle","width": "120px"})])
                         ]),
                         html.Div(children=[
-                        html.Button('Obtener Configuración', id='predecir2',className="predecir", n_clicks=0,style={"marginTop": "50px","width":"70%","height": "70px","-webkit-border-radius": "50px"})],
+                        html.Button('Obtener Configuración', id='predecir2',className="predecir", n_clicks=0,style={"marginTop": "50px","width":"70%","height": "70px","WebkitBorderRadius": "50px"})],
                         style={"textAlign":"center"})
                     ])
                 )
@@ -321,7 +321,7 @@ def modelo_supervisado():
                      html.H2("SQI medio:",
                              style={"fontSize": "20px", "textAlign": "center", "marginTop": "40px"}),
                      html.H2(id="resultado-output6",style={"fontSize":"20px","textAlign":"center","color":"green"}),
-                ],style={"margin-top":"40px","padding":"20px"}),
+                ],style={"marginTop":"40px","padding":"20px"}),
                  html.Div(className="results", children=[
                      html.H4("Configuración personalizada",
                              style={"fontSize": "20px", "textAlign": "center", "marginTop": "10px"}),
@@ -331,7 +331,7 @@ def modelo_supervisado():
                              style={"fontSize": "20px", "textAlign": "center", "marginTop": "40px"}),
                      html.H2(id="resultado-output8",
                              style={"fontSize": "20px", "textAlign": "center", "marginTop": "1px", "color": "green"})
-                ],style={"margin-top":"60px","padding":"20px"})
+                ],style={"marginTop":"60px","padding":"20px"})
 
              ])
                                             ])
@@ -357,7 +357,7 @@ def modelo_supervisado():
                             updatemode='drag',
                             vertical=True
                         ),
-                                     html.H2("Tubo 1", style={"fontSize": "13px", "margin-top":"10px"}),
+                                     html.H2("Tubo 1", style={"fontSize": "13px", "marginTop":"10px"}),
                                  ]),
                         html.Div(className="labels",
                                  children=[
@@ -371,7 +371,7 @@ def modelo_supervisado():
                                          updatemode='drag',
                                          vertical=True
                                      ),
-                                     html.H2("Tubo 2", style={"fontSize": "13px", "margin-top":"10px"}),
+                                     html.H2("Tubo 2", style={"fontSize": "13px", "marginTop":"10px"}),
                                  ]),
                         html.Div(className="labels",
                                  children=[
@@ -385,7 +385,7 @@ def modelo_supervisado():
                                          updatemode='drag',
                                          vertical=True
                                      ),
-                                     html.H2("Tubo 3", style={"fontSize": "13px", "margin-top":"10px"}),
+                                     html.H2("Tubo 3", style={"fontSize": "13px", "marginTop":"10px"}),
                                  ]),
                         html.Div(className="labels",
                                  children=[
@@ -399,7 +399,7 @@ def modelo_supervisado():
                                          updatemode='drag',
                                          vertical=True
                                      ),
-                                     html.H2("Tubo 4", style={"fontSize": "13px", "margin-top": "10px"}),
+                                     html.H2("Tubo 4", style={"fontSize": "13px", "marginTop": "10px"}),
                                  ]),
                         html.Div(className="labels",
                                  children=[
@@ -413,7 +413,7 @@ def modelo_supervisado():
                                          updatemode='drag',
                                          vertical=True
                                      ),
-                                     html.H2("Tubo 5", style={"fontSize": "13px", "margin-top":"10px"}),
+                                     html.H2("Tubo 5", style={"fontSize": "13px", "marginTop":"10px"}),
                                  ]),
                         html.Div(className="labels",
                                  children=[
@@ -427,7 +427,7 @@ def modelo_supervisado():
                                          updatemode='drag',
                                          vertical=True
                                      ),
-                                     html.H2("Tubo 6", style={"fontSize": "13px", "margin-top":"10px"}),
+                                     html.H2("Tubo 6", style={"fontSize": "13px", "marginTop":"10px"}),
                                  ]),
                     ]
                 , style = {"height": "300px","display":"flex"}))
@@ -584,7 +584,7 @@ def callbacks(_app):
 app = dash.Dash(__name__,external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.scripts.config.serve_locally = True
 app.config['suppress_callback_exceptions'] = True
-content = html.Div(id="page-content", style={"margin-left": "18rem",    "margin-right": "2rem",    "padding": "2rem 1rem",})
+content = html.Div(id="page-content", style={"marginLeft": "18rem",    "marginRight": "2rem",    "padding": "2rem 1rem",})
 app.layout= html.Div([dcc.Location(id="url", refresh=False), sidebar, content])
 app_name ='Abaco'
 callbacks(app)
