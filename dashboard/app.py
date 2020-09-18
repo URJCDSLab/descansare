@@ -562,7 +562,7 @@ def callbacks(_app):
 
         perfiles_afines = perfiles_sqr[(perfiles_sqr["IMC_cat"] == imc) & (perfiles_sqr["sexo"] == sexo) & (
                     perfiles_sqr["posicion"] == posicion) & (perfiles_sqr["presiones"] ==
-        '{}{}{}{}{}{}'.format(slider_updatemode_1,slider_updatemode_2,slider_updatemode_3,slider_updatemode_4,slider_updatemode_5,slider_updatemode_6))]
+        '{}{}{}{}{}{}'.format(slider_updatemode_1-1,slider_updatemode_2-1,slider_updatemode_3-1,slider_updatemode_4-1,slider_updatemode_5-1,slider_updatemode_6-1))]
 
         mean = round(perfiles_afines["sqr"].mean(),2)
         std = round(perfiles_afines["sqr"].std(),2)
