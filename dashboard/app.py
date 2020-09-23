@@ -16,6 +16,7 @@ import dash_html_components as html
 import plotly.express as px
 import dash_bootstrap_components as dbc
 import math
+from scipy.stats import norm
 
 if sys.version_info < (3, 7):
     import pickle5 as pickle
@@ -90,6 +91,91 @@ def presiones_df_heat(df):
     return df_completo_pres, df_pres_count, df_pres_prop
 
 
+def simula_sqi(mu, sigma, n_simul=7, alfa=0.4):
+    '''Simula los n valores de SQI y proporciona el valor de SQI límite para levantar las alertas'''
+    sqi_simulados = np.random.normal(mu, sigma, n_simul)
+
+    p = norm.ppf((1 - alfa) / 2)
+    valor_alerta = mu - p * sigma
+
+    return sqi_simulados, valor_alerta
+
+def model_n(sqi_simulados, valor_alerta, ventana, n_alerta):
+    '''Devuelve el ínidice necesario para filtar los SQI simulados hasta que se levanta la alerta. Dependiendo
+    de la ventana y el número de veces (n_alerta) que el SQI es inferior al valor de alerta (valor_alerta)'''
+    n_simul = len(sqi_simulados)
+    alarmas = np.array([sum((sqi_simulados < valor_alerta)[i:i+ventana]) for i in range(n_simul-ventana+1)]) > (n_alerta - 1)
+    if np.sum(alarmas) > 0:
+        aviso_cambio = np.argmax(alarmas) + ventana
+    else:
+        aviso_cambio = None
+    return aviso_cambio
+
+def nueva_configuracion(presiones, configuracion_cero):
+    '''Devuelve la nueva configuración para un individuo dados los estadísticos de las presiones para su categoría'''
+
+    # Dataframe con las posibles presiones nuevas
+    presiones_posibles = presiones[presiones.frecuencia_relativa > 10].sort_values(by='media', ascending=False)
+    for i in range(1, presiones_posibles.shape[0]):
+        # Configuración con SQR más alto, para una frecuencia relativa mayor del 10%, distinto de la configuración actual
+        nuevas_presiones = presiones_posibles.head(i).index[0]
+        if nuevas_presiones != configuracion_cero:
+            break
+    return nuevas_presiones
+
+def sqr_actual(perfiles_sqr, sexo, posicion, altura, peso, configuracion_cero):
+    '''Se calcula la media y la desviación para la simulación. Además, el dataframe de estadísticos descriptivos
+    de las configuraciones de presiones en su grupo'''
+    # Se calcula el IMC
+    IMC = peso / (altura / 100) ** 2
+    # Cálculo del IMC categorizado
+    if IMC < 25:
+        IMC_cat = 'Normal'
+    elif IMC < 30:
+        IMC_cat = 'Overweight'
+    else:
+        IMC_cat = 'Obese'
+    # Filtrado del grupo al que pertenece
+    perfiles_filtrado = perfiles_sqr[
+        (perfiles_sqr.sexo == sexo) & (perfiles_sqr.posicion == posicion) & (perfiles_sqr.IMC_cat == IMC_cat)]
+    presiones = perfiles_filtrado[['presiones', 'sqr']].groupby('presiones').describe().loc[:, 'sqr']
+    # Cálculo de estadísticos del SQR para cada configuración de presiones
+    presiones = presiones.rename({'count': 'frecuencia_absoluta', 'mean': 'media', 'std': 'desviación'},
+                                 axis='columns').round(2)
+    presiones['frecuencia_absoluta'] = presiones['frecuencia_absoluta'].astype('int')
+    presiones['frecuencia_relativa'] = round(100 * presiones['frecuencia_absoluta'] / perfiles_filtrado.shape[0], 2)
+    try:
+        media = presiones.loc[configuracion_cero]['media']
+        desviacion = presiones.loc[configuracion_cero]['desviación']
+    except:
+        media = perfiles_filtrado['sqr'].mean()
+        desviacion = perfiles_filtrado['sqr'].std()
+
+    if math.isnan(desviacion):
+        desviacion = perfiles_filtrado['sqr'].std()
+
+    return presiones, round(media, 2), round(desviacion, 2)
+
+
+def modelo_evolutivo_simulacion(perfiles_sqr, sexo, posicion, altura, peso, configuracion_cero):
+    # Se calculan los parámetros de la distribución del SQR y el dataframe de la categoría
+    presiones, mu, sigma = sqr_actual(perfiles_sqr, sexo, posicion, altura, peso, configuracion_cero)
+    # Se simulan los valores y el valor de alerta
+    sqi_simulados, valor_alerta = simula_sqi(mu, sigma)
+    # Se calcula el primer día de alerta de cada modelo
+    alarmas_modelos = [model_n(sqi_simulados, valor_alerta, *i) for i in [(3, 2), (5, 2), (7, 7)] if
+                       model_n(sqi_simulados, valor_alerta, *i) != None]
+    # Se comprueba si hay alguna alerta en algún modelo
+    if alarmas_modelos != []:
+        # Se filtran los valores SQR simulados hasta el primer día de alerta
+        valores_prev_alerta = sqi_simulados[:min(alarmas_modelos)]
+        # Se proporciona la configuración recomendada
+        nuevas_presiones = nueva_configuracion(presiones, configuracion_cero)
+    else:
+        valores_prev_alerta = sqi_simulados
+        nuevas_presiones = None
+
+    return nuevas_presiones, valores_prev_alerta, valor_alerta, mu, sigma
 
 sidebar = html.Div(
     [
@@ -99,6 +185,7 @@ sidebar = html.Div(
             [
                 dbc.NavItem(dbc.NavLink("Modelo día 0", href="/page-1", id="page-1-link")),
                 dbc.NavItem(dbc.NavLink("Modelo supervisado", href="/page-2",id="page-2-link")),
+                dbc.NavItem(dbc.NavLink("Aprendizaje por refuerzo", href="/page-3",id="page-3-link"))
             ],
             vertical=True,
             pills=True,
@@ -207,7 +294,7 @@ def modelo_dia_cero():
             ])
         ]),
         html.Div(id='plot-content', className="plot-content", children=[
-            html.H4("Configuración de los Vecinos más cercanos",style={"fontSize":"20px","textAlign":"center", "marginTop": "1px"}),
+            html.H4("Configuración de los Vecinos más cercanos",style={"fontSize":"30px","textAlign":"center", "marginTop": "1px"}),
             dcc.Loading(className='dashbio-loading', children=html.Div(
                 id='plot-div',
                 children=dcc.Graph(
@@ -219,17 +306,17 @@ def modelo_dia_cero():
                  html.Div(style={"display": "flex"},children=[
                      html.H2("SQI medio: ",style={"fontSize": "20px"}),
                              html.H2(id="resultado-output3",
-                                     style={"fontSize": "20px", "textAlign": "center", "color": "green"})
+                                     style={"fontSize": "20px", "textAlign": "center", "color": "green","margin-left":"5px"})
                  ]),
                  html.Div(style={"display": "flex"},children=[
                      html.H2("Configuración óptima recomendada: ",style={"fontSize": "20px"}),
                              html.H2(id="resultado-output",
-                                     style={"fontSize": "20px", "textAlign": "center", "color": "green"})
+                                     style={"fontSize": "20px", "textAlign": "center", "color": "green","margin-left":"5px"})
                  ]),
                  html.Div(style={"display": "flex"},children=[
                      html.H2("SQI esperado con la configuración recomendada: ",style={"fontSize": "20px"}),
                      html.H2(id="resultado-output2",
-                             style={"fontSize": "20px", "textAlign": "center", "color": "green"}),
+                             style={"fontSize": "20px", "textAlign": "center", "color": "green","margin-left":"5px"}),
                  ])
 
              ])
@@ -315,20 +402,20 @@ def modelo_supervisado():
 
                  html.Div( className="results", children=[
 
-                     html.H2("Configuración más común",
-                             style={"fontSize": "20px", "textAlign": "center", "marginTop": "10px"}),
+                     html.H2("Configuración más común:",
+                             style={"fontSize": "20px", "textAlign": "left", "marginTop": "10px"}),
                      html.H2(id="resultado-output5",style={"fontSize":"20px","textAlign":"center" ,"color":"green"}),
                      html.H2("SQI medio:",
-                             style={"fontSize": "20px", "textAlign": "center", "marginTop": "40px"}),
+                             style={"fontSize": "20px", "textAlign": "left", "marginTop": "40px"}),
                      html.H2(id="resultado-output6",style={"fontSize":"20px","textAlign":"center","color":"green"}),
                 ],style={"marginTop":"40px","padding":"20px"}),
                  html.Div(className="results", children=[
-                     html.H4("Configuración personalizada",
-                             style={"fontSize": "20px", "textAlign": "center", "marginTop": "10px"}),
+                     html.H4("Configuración personalizada:",
+                             style={"fontSize": "20px", "textAlign": "left", "marginTop": "10px"}),
                      html.H2(id="resultado-output7",
                              style={"fontSize": "20px", "textAlign": "center", "marginTop": "1px", "color": "green"}),
                      html.H4("SQI medio:",
-                             style={"fontSize": "20px", "textAlign": "center", "marginTop": "40px"}),
+                             style={"fontSize": "20px", "textAlign": "left", "marginTop": "40px"}),
                      html.H2(id="resultado-output8",
                              style={"fontSize": "20px", "textAlign": "center", "marginTop": "1px", "color": "green"})
                 ],style={"marginTop":"60px","padding":"20px"})
@@ -338,7 +425,7 @@ def modelo_supervisado():
         ]),
             html.Div(id='play-content', className="play-content", children=[
                 html.H4("Personalización de presiones",
-                        style={"fontSize": "20px", "textAlign": "center", "marginTop": "1px"}),
+                        style={"fontSize": "30px", "textAlign": "center", "marginTop": "1px"}),
 
 
 
@@ -438,16 +525,129 @@ def modelo_supervisado():
 
 
 
+def modelo_refuerzo():
+    return html.Div(id='app3', className='app', children=[
+        #Empieza Header
+        html.Div(className='header', children=[
+            html.H1(
+                "ABACO: Aprendizaje por refuerzo",
+                style={"textAlign":"center"}
+            )
+        ]),
+        #Fin de header
+
+        #Empieza contenedor de contenido (segunda row html)
+        html.Div(id="contenido", className='contenido', children=[
+        html.Div(id='vp-control-tabs', className='control-tabs', children=[
+            dcc.Tabs(id='vp-tabs', value='predecir', children=[
+                dcc.Tab(
+                    label='Predecir',
+                    value='predecir',
+                    children=html.Div(className='control-tab', children=[
+                        html.Br(),
+                        html.Br(),
+                        html.Div(className="Sexo", children=[
+                            html.Div(style={"display": "inline-block", "width":"60%"}, children=[
+                            html.H4("Sexo",style={"display": "inline-block"}),]),
+                            html.Div(style={"display": "inline-block", "width": "40%"}, children=[
+                            dcc.Dropdown(
+                                id='sexo2',
+                                options=[
+                                    {'label': 'Masculino', 'value': '1'},
+                                    {'label': 'Femenino', 'value': '0'},
+                                ],
+                                value='0'
+                            ,style={"display": "inline-block","verticalAlign": "middle","width": "120px"})])
+                        ], style={"width": "100%"}),
+                        html.Div(className="altura", children=[
+                            html.Div(style={"display": "inline-block", "width": "60%"}, children=[
+                            html.H4("Altura (cm)" , style={"display":"inline-block"})]),
+                            html.Div(style={"display": "inline-block", "width": "40%"}, children=[
+                            dcc.Input(id="altura2", type="number", placeholder="Altura (cm)",min=0, max=250, step=1,value="180",
+                                      style={"display": "inline-block","verticalAlign": "middle","width": "120px"})])
+                        ],style={"width":"100%"}),
+                        html.Div(className="peso", children=[
+                            html.Div(style={"display": "inline-block", "width": "60%"}, children=[
+                            html.H4("Peso (Kg)",style={"display": "inline-block"})]),
+                            html.Div(style={"display": "inline-block", "width": "40%"}, children=[
+                            dcc.Input(id="peso2", type="number", placeholder="Peso (Kg)", min=0, max=300, step=1,value="80",
+                                      style={"display": "inline-block","verticalAlign": "middle","width": "120px"})])
+                        ], style={"width": "100%"}),
+                        html.Div(className="Posicion", children=[
+                            html.Div(style={"display": "inline-block", "width": "60%"}, children=[
+                            html.H4("Posición",style={"display": "inline-block"})]),
+                            html.Div(style={"display": "inline-block", "width": "40%"}, children=[
+                            dcc.Dropdown(
+                                id='posicion2',
+                                options=[
+                                    {'label': 'Lateral', 'value': '0'},
+                                    {'label': 'Supine', 'value': '1'},
+                                ],
+                                value='0'
+                            , style={"display": "inline-block","verticalAlign": "middle","width": "120px"})])
+                        ])
+                    ])
+                )
+            ])
+        ],style={"position":"relative"}),
+        html.Div(className="comun-content", children=[
+            html.Div(id='results2',
+             children=[
+
+                 html.Div( className="results", children=[
+
+                     html.H2("Configuración recomendada:",
+                             style={"fontSize": "20px", "textAlign": "left", "marginTop": "10px"}),
+                     html.H2(id="resultado-output11",style={"fontSize":"20px","textAlign":"center" ,"color":"green"}),
+                     html.H2("SQI esperado:",
+                             style={"fontSize": "20px", "textAlign": "left", "marginTop": "40px"}),
+                     html.H2(id="resultado-output12",style={"fontSize":"20px","textAlign":"center","color":"green"}),
+                ],style={"marginTop":"40px","padding":"20px"})
+
+                                            ]),
+            html.Div(children=[
+                html.Button('Simula como vas a dormir', id='simular', className="predecir", n_clicks=0,
+                            style={"position": "absolute", "bottom": "4%", "marginTop": "50px", "width": "70%", "marginLeft":"10%",
+                                   "height": "70px",
+                                   "WebkitBorderRadius": "50px"})],
+                style={"textAlign": "center","display": "flex"})
+
+        ],style={"position":"relative"}),
+
+            html.Div(id='play-content', className="play-content", children=[
+                html.H4("Simulación (SQI)",
+                        style={"fontSize": "30px", "textAlign": "center", "marginTop": "1px"}),
+
+                dcc.Loading(className='dashbio-loading', children=html.Div(
+                    id='simulacion',
+                    children=[
+                        html.Div(children=[
+                            html.H2(id="resultado-output15",
+                                    style={"fontSize": "20px"})
+                        ],style={"margin-top":"25px"}),
+                        html.Div(id='resultado-output14', className="results",
+                                 children=[
+
+                                 ],style={"position":"absolute","bottom":"4%","right":"4%","left":"4%"})
+                    ])
+                )
+
+            ],style={"position":"relative","min-height":"500px"})
+
+    ])
+    ])
+
+
+
 def callbacks(_app):
     @_app.callback(
-        [Output(f"page-{i}-link", "active") for i in range(1, 3)],
+        [Output(f"page-{i}-link", "active") for i in range(1, 4)],
         [Input("url", "pathname")],
     )
     def toggle_active_links(pathname):
-        print(pathname)
         if pathname == "/":
-            return True, False
-        return [pathname == f"/page-{i}" for i in range(1, 3)]
+            return True, False,False
+        return [pathname == f"/page-{i}" for i in range(1, 4)]
 
     @_app.callback(Output("page-content", "children"), [Input("url", "pathname")])
     def render_page_content(pathname):
@@ -455,6 +655,8 @@ def callbacks(_app):
             return modelo_dia_cero()
         elif pathname == "/page-2":
             return modelo_supervisado()
+        elif pathname == "/page-3":
+            return modelo_refuerzo()
         # If the user tries to reach a different page, return a 404 message
         return dbc.Jumbotron(
             [
@@ -559,6 +761,9 @@ def callbacks(_app):
         else:
             imc = "Obese"
 
+        if (slider_updatemode_1 is None) or (slider_updatemode_2 is None) or (slider_updatemode_3 is None) or (slider_updatemode_4 is None) or (slider_updatemode_5 is None) or (slider_updatemode_6 is None):
+            return "",""
+
 
         perfiles_afines = perfiles_sqr[(perfiles_sqr["IMC_cat"] == imc) & (perfiles_sqr["sexo"] == sexo) & (
                     perfiles_sqr["posicion"] == posicion) & (perfiles_sqr["presiones"] ==
@@ -575,7 +780,61 @@ def callbacks(_app):
         return '{}{}{}{}{}{}'.format(slider_updatemode_1,slider_updatemode_2,slider_updatemode_3,slider_updatemode_4,slider_updatemode_5,slider_updatemode_6),result
 
 
+    @_app.callback(
+        [Output('resultado-output11', 'children'),
+         Output('resultado-output12', 'children'),
+         Output('resultado-output14', 'children'),
+         Output('resultado-output15', 'children')],
 
+        [Input('sexo2', 'value'),
+         Input('posicion2', 'value'),
+         Input('altura2', 'value'),
+         Input('peso2', 'value'),
+         Input("simular","n_clicks")]
+    )
+    def get_prediction_refuerzo(sexo,posicion,altura,peso,simular):
+
+        results = model.predict(np.array([int(altura),int(peso),int(posicion),int(sexo)]),neighbours_index=True)
+        target =model.target[results[1]]
+        sqis = model.ref[results[1]]
+        mean = np.mean(sqis[0])
+        std = np.std(sqis[0])
+        mean = np.round(mean,decimals=3)
+        std = np.round(std, decimals=3)
+        presiones = '{}'.format(
+            ''.join(map(str, results[0][0][0])))
+        if sexo ==0:
+            sexo="Female"
+        else:
+            sexo="Male"
+        if posicion == 0:
+            posicion="Lateral"
+        else:
+            posicion="Supine"
+
+        simulacion = modelo_evolutivo_simulacion(perfiles_sqr, sexo, posicion, int(altura), int(peso), results[0][0][0])
+
+        optima = [int(i) + 1 for i in results[0][0][0]]
+
+
+        dias = html.Ul([html.Li("Día "+ str(k+1) +":  " + str(round(x,2)), style={"color":"green","marginTop":"2%"}) if int(x)>int(simulacion[2]) else html.Li("Día "+ str(k+1) +":  " + str(round(x,2)), style={"color":"red","marginTop":"2%"}) for k,x in enumerate(simulacion[1])])
+
+
+        cambios = html.Div(children=[
+            html.H2("Se recomiendan los siguientes cambios en tu configuración:", style={"fontSize": "20px"}),
+            html.H2(simulacion[0],
+                    style={"fontSize": "20px", "textAlign": "center", "color": "green"})
+        ])
+        if simulacion[0] == None:
+            cambios = html.Div(children=[
+                html.H2("No se recomienda ningún cambio en tu configuración", style={"fontSize": "20px"})
+            ])
+
+
+
+        return '{}'.format(
+            ''.join(map(str, optima))
+        ),'{} ± {}'.format(round(simulacion[3],2),round(simulacion[4],2)),cambios,dias
 
 
 
