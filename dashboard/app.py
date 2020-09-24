@@ -98,7 +98,9 @@ def simula_sqi(mu, sigma, n_simul=7, alfa=0.4):
     p = norm.ppf((1 - alfa) / 2)
     valor_alerta = mu + p * sigma
 
-    return sqi_simulados, valor_alerta
+    sqi_simulados_filtrado = np.array([i if i < 100 else 100 for i in sqi_simulados])
+
+    return sqi_simulados_filtrado, valor_alerta
 
 def model_n(sqi_simulados, valor_alerta, ventana, n_alerta):
     '''Devuelve el ínidice necesario para filtar los SQI simulados hasta que se levanta la alerta. Dependiendo
