@@ -606,7 +606,7 @@ def modelo_refuerzo():
 
                                             ]),
             html.Div(children=[
-                html.Button('Simula como vas a dormir', id='simular', className="predecir", n_clicks=0,
+                html.Button('Simulación', id='simular', className="predecir", n_clicks=0,
                             style={"position": "absolute", "bottom": "4%", "marginTop": "50px", "width": "70%", "marginLeft":"10%",
                                    "height": "70px",
                                    "WebkitBorderRadius": "50px"})],
