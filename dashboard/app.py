@@ -96,7 +96,7 @@ def simula_sqi(mu, sigma, n_simul=7, alfa=0.4):
     sqi_simulados = np.random.normal(mu, sigma, n_simul)
 
     p = norm.ppf((1 - alfa) / 2)
-    valor_alerta = mu - p * sigma
+    valor_alerta = mu + p * sigma
 
     return sqi_simulados, valor_alerta
 
