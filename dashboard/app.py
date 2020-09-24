@@ -803,11 +803,12 @@ def callbacks(_app):
         std = np.round(std, decimals=3)
         presiones = '{}'.format(
             ''.join(map(str, results[0][0][0])))
-        if sexo ==0:
+        if int(sexo) ==0:
             sexo="Female"
         else:
             sexo="Male"
-        if posicion == 0:
+
+        if int(posicion) == 0:
             posicion="Lateral"
         else:
             posicion="Supine"
