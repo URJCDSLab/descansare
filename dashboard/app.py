@@ -98,7 +98,7 @@ def simula_sqi(mu, sigma, n_simul=7, alfa=0.4):
     p = norm.ppf((1 - alfa) / 2)
     valor_alerta = mu + p * sigma
 
-    sqi_simulados_filtrado = np.array([i if i < 100 else 100 for i in x])
+    sqi_simulados_filtrado = np.array([i if i < 100 else 100 for i in sqi_simulados])
 
     return sqi_simulados_filtrado, valor_alerta
 
