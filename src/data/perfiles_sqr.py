@@ -2,9 +2,11 @@ import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 from datetime import datetime
 
+filtered = '_not_filtered'
+
 # Cargamos las dos tablas de datos
 perfiles = pd.read_parquet('data/raw/flex_perfiles_usuario.parquet')
-sesiones = pd.read_parquet('data/interim/sessions_new_sqr_flex.parquet')
+sesiones = pd.read_parquet(f'data/interim/sessions_new_sqr_flex{filtered}.parquet')
 
 # Filtrado de sesiones válidas
 # #Sesiones con perfil asociado en la tabla de perfiles
@@ -58,7 +60,7 @@ perfiles_sqr_filtrado = perfiles_sqr[(perfiles_sqr["peso"] < 150)
                                      & (perfiles_sqr['sqr'] < 100)]
 
 # Guardado de datos procesados
-perfiles_sqr_filtrado.to_parquet(f'data/processed/perfiles_sqr_filtrado.parquet')
+perfiles_sqr_filtrado.to_parquet(f'data/processed/perfiles_sqr_filtrado{filtered}.parquet')
 
 # Procesado de variables categóricas para el knn
 
@@ -73,4 +75,4 @@ df_perfiles.loc[:, 'posicion'] = le.fit_transform(perfiles_sqr_filtrado['posicio
 df_perfiles.loc[:, 'sexo'] = le.fit_transform(perfiles_sqr_filtrado['sexo'])
 
 # Guardado de datos procesados para el knn
-df_perfiles.to_parquet(f'data/processed/perfiles_sqr_knn.parquet')
+df_perfiles.to_parquet(f'data/processed/perfiles_sqr_knn{filtered}.parquet')
