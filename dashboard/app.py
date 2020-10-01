@@ -34,6 +34,11 @@ perfiles_sqr['IMC'] = perfiles_sqr['peso'] / (perfiles_sqr['altura']/100)**2
 perfiles_sqr['IMC_cat'] = pd.cut(perfiles_sqr['IMC'], bins=[0, 25, 30, 50],
                                 include_lowest=True,labels=['Normal', 'Overweight', 'Obese'])
 
+perfiles_sqr_no_filtrado = pd.read_parquet('./data/perfiles_sqr_filtrado_not_filtered.parquet')
+perfiles_sqr_no_filtrado['IMC'] = perfiles_sqr_no_filtrado['peso'] / (perfiles_sqr_no_filtrado['altura']/100)**2
+perfiles_sqr_no_filtrado['IMC_cat'] = pd.cut(perfiles_sqr_no_filtrado['IMC'], bins=[0, 25, 30, 50],
+                                include_lowest=True,labels=['Normal', 'Overweight', 'Obese'])
+
 # tubos
 for i in range(6):
     perfiles_sqr[f'PresPos{i+1}'] = perfiles_sqr.presiones.apply(lambda x: x[i])
@@ -125,11 +130,14 @@ def nueva_configuracion(presiones, configuracion_cero):
             break
     return nuevas_presiones
 
-def sqr_actual(perfiles_sqr, sexo, posicion, altura, peso, configuracion_cero):
+
+def grupo_actual(perfiles_sqr, perfiles_sqr_no_filtrado, sexo, posicion, altura, peso, configuracion_cero):
     '''Se calcula la media y la desviación para la simulación. Además, el dataframe de estadísticos descriptivos
     de las configuraciones de presiones en su grupo'''
+
     # Se calcula el IMC
     IMC = peso / (altura / 100) ** 2
+
     # Cálculo del IMC categorizado
     if IMC < 25:
         IMC_cat = 'Normal'
@@ -137,10 +145,21 @@ def sqr_actual(perfiles_sqr, sexo, posicion, altura, peso, configuracion_cero):
         IMC_cat = 'Overweight'
     else:
         IMC_cat = 'Obese'
+
     # Filtrado del grupo al que pertenece
     perfiles_filtrado = perfiles_sqr[
         (perfiles_sqr.sexo == sexo) & (perfiles_sqr.posicion == posicion) & (perfiles_sqr.IMC_cat == IMC_cat)]
+    horas_perfiles = perfiles_sqr_no_filtrado[
+        (perfiles_sqr_no_filtrado.sexo == sexo) & (perfiles_sqr_no_filtrado.posicion == posicion) & (
+                    perfiles_sqr_no_filtrado.IMC_cat == IMC_cat)].copy()
     presiones = perfiles_filtrado[['presiones', 'sqr']].groupby('presiones').describe().loc[:, 'sqr']
+
+    # Cálculo de horas de sueño
+    horas_perfiles['horas_sueño'] = ((horas_perfiles.fechaFin - horas_perfiles.fechaInicio) / np.timedelta64(1,
+                                                                                                             's')) / 3600
+    horas_perfiles['horas_int'] = horas_perfiles['horas_sueño'].astype(int)
+    horas_perfiles['horas_int'] = horas_perfiles['horas_int'].apply(lambda x: str(x) if x < 8 else str(8))
+
     # Cálculo de estadísticos del SQR para cada configuración de presiones
     presiones = presiones.rename({'count': 'frecuencia_absoluta', 'mean': 'media', 'std': 'desviación'},
                                  axis='columns').round(2)
@@ -156,28 +175,52 @@ def sqr_actual(perfiles_sqr, sexo, posicion, altura, peso, configuracion_cero):
     if math.isnan(desviacion):
         desviacion = perfiles_filtrado['sqr'].std()
 
-    return presiones, round(media, 2), round(desviacion, 2)
+    # Cálculo de estadísticos de las horas de sueño
+    horas = horas_perfiles[['horas_int', 'sqr']].groupby('horas_int').describe().loc[:, 'sqr']
+    horas = horas.rename({'count': 'frecuencia_absoluta', 'mean': 'media', 'std': 'desviación'}, axis='columns').round(
+        2)
+    media_horas = np.mean(horas_perfiles['horas_sueño']).round(2)
+    std_horas = np.std(horas_perfiles['horas_sueño']).round(2)
+
+    return presiones, round(media, 2), round(desviacion, 2), horas, media_horas, std_horas
 
 
-def modelo_evolutivo_simulacion(perfiles_sqr, sexo, posicion, altura, peso, configuracion_cero):
+def simula_horas(mu, sigma, n_simul=7):
+    '''Simula los n valores de hoas de sueño'''
+    horas_simulados = np.random.normal(mu, sigma, n_simul)
+
+    horas_simuladas_filtrado = np.array([8 if i > 8 else (2 if i < 2 else i) for i in horas_simulados])
+
+    return horas_simuladas_filtrado
+
+def modelo_evolutivo_simulacion(perfiles_sqr, perfiles_sqr_no_filtrado, sexo, posicion, altura, peso, configuracion_cero):
     # Se calculan los parámetros de la distribución del SQR y el dataframe de la categoría
-    presiones, mu, sigma = sqr_actual(perfiles_sqr, sexo, posicion, altura, peso, configuracion_cero)
-    # Se simulan los valores y el valor de alerta
+    presiones, mu, sigma, horas, muh, sigmah = grupo_actual(perfiles_sqr, perfiles_sqr_no_filtrado, sexo, posicion, altura, peso, configuracion_cero)
+    # Se simulan los valores SQR y el valor de alerta
     sqi_simulados, valor_alerta = simula_sqi(mu, sigma)
+    # Se simulan los valores de sueño
+    horas_simuladas = simula_horas(muh, sigmah)
     # Se calcula el primer día de alerta de cada modelo
-    alarmas_modelos = [model_n(sqi_simulados, valor_alerta, *i) for i in [(3, 2), (5, 2), (7, 7)] if
-                       model_n(sqi_simulados, valor_alerta, *i) != None]
+    alarmas_modelos = [model_n(sqi_simulados, valor_alerta, *i) for i in [(3, 2), (5, 2), (7, 7)] if model_n(sqi_simulados, valor_alerta, *i) != None]
     # Se comprueba si hay alguna alerta en algún modelo
     if alarmas_modelos != []:
         # Se filtran los valores SQR simulados hasta el primer día de alerta
         valores_prev_alerta = sqi_simulados[:min(alarmas_modelos)]
+        horas_prev_alerta = horas_simuladas[:min(alarmas_modelos)]
+        valor_medio_horas = np.mean(horas_simuladas[:min(alarmas_modelos)])
         # Se proporciona la configuración recomendada
         nuevas_presiones = nueva_configuracion(presiones, configuracion_cero)
     else:
         valores_prev_alerta = sqi_simulados
+        valor_medio_horas = np.mean(horas_simuladas)
         nuevas_presiones = None
-
-    return nuevas_presiones, valores_prev_alerta, valor_alerta, mu, sigma
+        horas_prev_alerta = horas_simuladas
+    try:
+        mejora_horas = round(((horas.loc[str(int(valor_medio_horas)+1)].media  - horas.loc[str(int(valor_medio_horas))].media) /  horas.loc[str(int(valor_medio_horas))].media)*100, 2)
+        mejora_horas = str(mejora_horas) + "%"
+    except:
+        mejora_horas = None
+    return nuevas_presiones, valores_prev_alerta, valor_alerta, mu, sigma, mejora_horas, horas_prev_alerta
 
 sidebar = html.Div(
     [
@@ -308,17 +351,17 @@ def modelo_dia_cero():
                  html.Div(style={"display": "flex"},children=[
                      html.H2("SQI medio: ",style={"fontSize": "20px"}),
                              html.H2(id="resultado-output3",
-                                     style={"fontSize": "20px", "textAlign": "center", "color": "green","margin-left":"5px"})
+                                     style={"fontSize": "20px", "textAlign": "center", "color": "green","marginLeft":"5px"})
                  ]),
                  html.Div(style={"display": "flex"},children=[
                      html.H2("Configuración óptima recomendada: ",style={"fontSize": "20px"}),
                              html.H2(id="resultado-output",
-                                     style={"fontSize": "20px", "textAlign": "center", "color": "green","margin-left":"5px"})
+                                     style={"fontSize": "20px", "textAlign": "center", "color": "green","marginLeft":"5px"})
                  ]),
                  html.Div(style={"display": "flex"},children=[
                      html.H2("SQI esperado con la configuración recomendada: ",style={"fontSize": "20px"}),
                      html.H2(id="resultado-output2",
-                             style={"fontSize": "20px", "textAlign": "center", "color": "green","margin-left":"5px"}),
+                             style={"fontSize": "20px", "textAlign": "center", "color": "green","marginLeft":"5px"}),
                  ])
 
              ])
@@ -617,8 +660,11 @@ def modelo_refuerzo():
         ],style={"position":"relative"}),
 
             html.Div(id='play-content', className="play-content", children=[
-                html.H4("Simulación (SQI)",
-                        style={"fontSize": "30px", "textAlign": "center", "marginTop": "1px"}),
+                html.Div(children = [
+                    html.H4("Simulación: SQI ",
+                            style={"fontSize": "30px", "textAlign": "center", "marginTop": "1px"})
+                ]),
+
 
                 dcc.Loading(className='dashbio-loading', children=html.Div(
                     id='simulacion',
@@ -626,15 +672,18 @@ def modelo_refuerzo():
                         html.Div(children=[
                             html.H2(id="resultado-output15",
                                     style={"fontSize": "20px"})
-                        ],style={"margin-top":"25px"}),
-                        html.Div(id='resultado-output14', className="results",
-                                 children=[
+                        ],style={"marginTop":"25px"}),
+                        html.Div( children=[
+                            html.Div(id='resultado-output14', className="results",
+                                     children=[
 
-                                 ],style={"position":"absolute","bottom":"4%","right":"4%","left":"4%"})
+                                     ], style={"bottom": "4%", "right": "4%", "left": "4%"})
+                        ],style={"position":"absolute","bottom": "4%", "right": "4%", "left": "4%"})
+
                     ])
                 )
 
-            ],style={"position":"relative","min-height":"500px"})
+            ],style={"position":"relative","minHeight":"550px"})
 
     ])
     ])
@@ -815,24 +864,51 @@ def callbacks(_app):
         else:
             posicion="Supine"
 
-        simulacion = modelo_evolutivo_simulacion(perfiles_sqr, sexo, posicion, int(altura), int(peso), results[0][0][0])
+        simulacion = modelo_evolutivo_simulacion(perfiles_sqr,perfiles_sqr_no_filtrado, sexo, posicion, int(altura), int(peso), results[0][0][0])
 
         optima = [int(i) + 1 for i in results[0][0][0]]
 
-
-        dias = html.Ul([html.Li("Día "+ str(k+1) +":  " + str(round(x,2)), style={"color":"green","marginTop":"2%"}) if int(x)>int(simulacion[2]) else html.Li("Día "+ str(k+1) +":  " + str(round(x,2)), style={"color":"red","marginTop":"2%"}) for k,x in enumerate(simulacion[1])])
+        dias = html.Ul([html.Li("Día "+ str(k+1) +":  " + str(round(x,2)) + " ("+str(round(simulacion[6][k],2)) + " horas)", style={"color":"green","marginTop":"2%"}) if int(x)>int(simulacion[2]) else html.Li("Día "+ str(k+1) +":  " + str(round(x,2))+ " ("+str(round(simulacion[6][k],2)) + " horas)", style={"color":"red","marginTop":"2%"}) for k,x in enumerate(simulacion[1])])
 
 
         cambios = html.Div(children=[
-            html.H2("Se recomiendan los siguientes cambios en tu configuración:", style={"fontSize": "20px"}),
+            html.H2("Se recomiendan los siguientes cambios en la configuración:", style={"fontSize": "20px"}),
             html.H2(simulacion[0],
-                    style={"fontSize": "20px", "textAlign": "center", "color": "green"})
+                    style={"fontSize": "20px", "textAlign": "center", "color": "green"}),
+            html.Br(),
+            html.Div(children=[
+                html.H2("Con la configuración actual, una hora más de sueño supondría un aumento del SQI del:",
+                        style={"fontSize": "20px"}),
+                html.H2(simulacion[5],
+                        style={"fontSize": "20px", "textAlign": "center", "color": "green"})
+            ])
         ])
-        if simulacion[0] == None:
+        a = simulacion[5]
+
+        if (simulacion[0] != None) and (a==None):
             cambios = html.Div(children=[
-                html.H2("No se recomienda ningún cambio en tu configuración", style={"fontSize": "20px"})
+                html.H2("Se recomiendan los siguientes cambios en la configuración:", style={"fontSize": "20px"}),
+                html.H2(simulacion[0],
+                        style={"fontSize": "20px", "textAlign": "center", "color": "green"})
             ])
 
+
+        if (simulacion[0] == None) and (a!=None):
+            cambios = html.Div(children=[
+                html.Div(children=[
+                    html.H2("No se recomiendan ningún cambio en la configuración", style={"fontSize": "20px"})
+                ]),
+                html.Br(),
+                html.H2("Con la configuración actual, una hora más de sueño supondría un aumento del SQI del:",
+                        style={"fontSize": "20px"}),
+                html.H2(a,
+                        style={"fontSize": "20px", "textAlign": "center", "color": "green"})
+            ])
+
+        if (simulacion[0] == None) and (a==None):
+            cambios = html.Div(children=[
+                html.H2("No se recomiendan ningún cambio en la configuración", style={"fontSize": "20px"})
+            ])
 
 
         return '{}'.format(
