@@ -3,6 +3,7 @@ from itertools import compress
 
 
 class Knn:
+    """Classifier implementing an argmax among reference value corresponding to neighbours within a given distance matrix"""
     def __init__(self, k=11, weights=None, dist_matrix=None):
         """K nearest neighbours for pressure settings that maximize the SQI value
 
@@ -87,8 +88,8 @@ class Knn:
 
         Args:
             data_pred (ndarray): Samples for prediccion
-            neighbours_index (bool, optional): The indexes of the neighbours are provided if neighbours_index=True. Defaults to False.
-            dist_matrix (bool, optional): The distance matrix are provided if dist_matrix=True. Defaults to False.
+            neighbours_index (bool, optional): Indicates whether the indexes of the neighbours are turned (True) or not (False). Defaults to False.
+            dist_matrix (bool, optional): Indicates whether the distance matrix is turned (True) or not (False). Defaults to False.
 
         Returns:
             list: list of predictions
