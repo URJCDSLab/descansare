@@ -87,8 +87,8 @@ class Knn:
 
         Args:
             data_pred (ndarray): Samples for prediccion
-            neighbours_index (bool, optional): False does not provide indexes of the neighbours, True does. Defaults to False.
-            dist_matrix (bool, optional): False does not provide distance matrix, True does. Defaults to False.
+            neighbours_index (bool, optional): The indexes of the neighbours are provided if neighbours_index=True. Defaults to False.
+            dist_matrix (bool, optional): The distance matrix are provided if dist_matrix=True. Defaults to False.
 
         Returns:
             list: list of predictions
