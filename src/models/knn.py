@@ -3,7 +3,18 @@ from itertools import compress
 
 
 class Knn:
-    """Classifier implementing an argmax among reference value corresponding to neighbours within a given distance matrix"""
+    """Classifier implementing an argmax among reference value corresponding to neighbours within a given distance matrix
+    
+    Atr:
+        weights (array): Array with the weights of the explicative variables.
+        k (int): Number of neighbours setted.
+        dist_matrix (array): Distance matrix of the training sample
+        data_train (array): Training sample
+        neighbours (array): Array of dimension (n_samples, k) with neighbours indexes of each taining sample.
+        preds (array): Array of dimension (n_samples, 2) with pressure predicted and SQR associated of each taining sample.
+        target (array):Array of dimension n_samples with the pressure setting of each training sample.
+        ref (array): Array of dimension n_samples with the SQI of each training sample.
+    """
     def __init__(self, k=11, weights=None, dist_matrix=None):
         """K nearest neighbours for pressure settings that maximize the SQI value
 
