@@ -3,9 +3,9 @@ import numpy as np
 
 
 def sqr_ponderado(data, drop=True, min=3):
-    
+
     df = data.copy()
-    
+
     df['notaUsuario'] = df['notaUsuario']*10
 
     freq_notas_perfiles = df[df['notaUsuario'].notnull()]['idPerfiles'].value_counts()
@@ -31,7 +31,7 @@ def sqr_ponderado(data, drop=True, min=3):
     new_df.loc[(new_df['freq_rel'].notnull()) & (new_df['notaUsuario'].notnull()), 'sqr'] = new_df['freq_rel']*new_df['notaUsuario'] + (1-new_df['freq_rel'])*new_df['sqr_old']
 
     if drop:
-        new_df.drop(columns=('freq_rel', 'old_sqr'))
+        new_df.drop(columns=['freq_rel', 'sqr_old'])
 
     return new_df
 
