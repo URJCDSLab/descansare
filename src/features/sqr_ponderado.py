@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 
-def sqr_ponderado(data, drop=True):
+def sqr_ponderado(data, drop=True, min=3):
     data['notaUsuario'] = data['notaUsuario']*10
 
     freq_notas_perfiles = data[data['notaUsuario'].notnull()]['idPerfiles'].value_counts()
@@ -11,7 +11,7 @@ def sqr_ponderado(data, drop=True):
 
     freq_sesiones.name = 'freq_sesiones'
 
-    freq_notas_perfiles_validos = freq_notas_perfiles[freq_notas_perfiles > 2]
+    freq_notas_perfiles_validos = freq_notas_perfiles[freq_notas_perfiles > min-1]
 
     freq_notas_perfiles_validos.name = 'freq_notas'
 
