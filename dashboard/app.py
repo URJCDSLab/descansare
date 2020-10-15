@@ -24,6 +24,41 @@ else:
     import pickle
 
 
+def sqr_ponderado(data, drop=True, min=3):
+    df = data.copy()
+
+    df['notaUsuario'] = df['notaUsuario'] * 10
+
+    freq_notas_perfiles = df[df['notaUsuario'].notnull()]['idPerfiles'].value_counts()
+
+    freq_sesiones = df['idPerfiles'].value_counts()
+
+    freq_sesiones.name = 'freq_sesiones'
+
+    freq_notas_perfiles_validos = freq_notas_perfiles[freq_notas_perfiles > min - 1]
+
+    freq_notas_perfiles_validos.name = 'freq_notas'
+
+    df_notas = pd.concat([freq_sesiones, freq_notas_perfiles_validos], axis=1)
+
+    df_notas = df_notas[df_notas.freq_notas.notnull()]
+
+    df_notas['freq_rel'] = np.round(df_notas.freq_notas / df_notas.freq_sesiones, 2)
+
+    new_df = pd.merge(df, df_notas['freq_rel'], how='left', left_on='idPerfiles', right_index=True)
+
+    new_df['sqr_old'] = new_df['sqr']
+
+    new_df.loc[(new_df['freq_rel'].notnull()) & (new_df['notaUsuario'].notnull()), 'sqr'] = new_df['freq_rel'] * new_df[
+        'notaUsuario'] + (1 - new_df['freq_rel']) * new_df['sqr_old']
+
+    if drop:
+        new_df.drop(columns=(['freq_rel', 'sqr_old']))
+
+    return new_df
+
+
+
 DATAPATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'model')
 with open(os.path.join(DATAPATH, 'knn.p'), 'rb') as pickle_file:
     model = pickle.load(pickle_file)
@@ -34,10 +69,15 @@ perfiles_sqr['IMC'] = perfiles_sqr['peso'] / (perfiles_sqr['altura']/100)**2
 perfiles_sqr['IMC_cat'] = pd.cut(perfiles_sqr['IMC'], bins=[0, 25, 30, 50],
                                 include_lowest=True,labels=['Normal', 'Overweight', 'Obese'])
 
+perfiles_sqr = sqr_ponderado(perfiles_sqr)
+
+
 perfiles_sqr_no_filtrado = pd.read_parquet('./data/perfiles_sqr_filtrado_not_filtered.parquet')
 perfiles_sqr_no_filtrado['IMC'] = perfiles_sqr_no_filtrado['peso'] / (perfiles_sqr_no_filtrado['altura']/100)**2
 perfiles_sqr_no_filtrado['IMC_cat'] = pd.cut(perfiles_sqr_no_filtrado['IMC'], bins=[0, 25, 30, 50],
                                 include_lowest=True,labels=['Normal', 'Overweight', 'Obese'])
+
+perfiles_sqr_no_filtrado = sqr_ponderado(perfiles_sqr_no_filtrado)
 
 # tubos
 for i in range(6):
