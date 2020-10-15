@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 
-def sqr_ponderado(data, drop=True, min=3):
+def sqr_ponderado(data, drop_cols=True, min_freq=3):
 
     df = data.copy()
 
@@ -14,7 +14,7 @@ def sqr_ponderado(data, drop=True, min=3):
 
     freq_sesiones.name = 'freq_sesiones'
 
-    freq_notas_perfiles_validos = freq_notas_perfiles[freq_notas_perfiles > min-1]
+    freq_notas_perfiles_validos = freq_notas_perfiles[freq_notas_perfiles > min_freq-1]
 
     freq_notas_perfiles_validos.name = 'freq_notas'
 
@@ -30,7 +30,7 @@ def sqr_ponderado(data, drop=True, min=3):
 
     new_df.loc[(new_df['freq_rel'].notnull()) & (new_df['notaUsuario'].notnull()), 'sqr'] = new_df['freq_rel']*new_df['notaUsuario'] + (1-new_df['freq_rel'])*new_df['sqr_old']
 
-    if drop:
+    if drop_cols:
         new_df.drop(columns=['freq_rel', 'sqr_old'])
 
     return new_df
