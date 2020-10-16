@@ -3,6 +3,22 @@ import numpy as np
 
 
 def sqr_ponderado(data, drop_cols=True, min_freq=3):
+    """This function computed the Weighted SQR, by using the users' sleep quality notes.
+
+    Args:
+        data (DataFrame): DataFrame of users sleep sessions, with at least the following columns:
+
+        idPerfiles, notaUsuario and sqr
+
+        drop_cols (bool, optional): Defaults to True. If set to False
+        initial SQR (sqr_old) and notes relative frequency (freq_rel) are provided
+        min_freq (int, optional): Defaults to 3. Minimum number of notes to take
+        into account user opinion.
+
+
+    Returns:
+        DataFrame: Same structure of data, where the column sqr is the new weighted sqr.
+    """
 
     df = data.copy()
 
