@@ -2,7 +2,7 @@ import numpy as np
 from itertools import compress
 
 
-class Knn:
+class Knn_p:
     """Classifier implementing an argmax among reference value corresponding to neighbours within a given distance matrix
     
     Atr:
